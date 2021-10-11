@@ -237,7 +237,6 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
 
     // Deposit LP tokens to MasterChef for DragonGol allocation.
     function deposit(uint256 _pid, uint256 _amount) external nonReentrant {
-        require(_amount > 0, "Dragon: ZERO_VALUE");
         require(_pid < poolInfo.length, "Dragon: Non-existent pool");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -249,20 +248,29 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
             }
         }
 
-        pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+        if (_amount > 0) {
+            // We are considering tokens which takes accounts fees when trasnsferring such like reflect finance
+            IERC20 _lpToken = pool.lpToken;
+            {
+                uint balnceBefore = _lpToken.balanceOf(address(this)); 
+                _lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+                _amount = _lpToken.balanceOf(address(this)) - balnceBefore;
+                require(_amount > 0, "We only accept amount > 0");
+            }
 
-        if (pool.depositFeeBP > 0) {
-            uint256 depositFee = (_amount * pool.depositFeeBP) / 10000;
-            // We split this fee to feeAddress and Dragon Nest supporters - 90% 10%
-            pool.lpToken.safeTransfer(feeAddress, (depositFee * 9000) / 10000);
+            if (pool.depositFeeBP > 0) {
+                uint256 depositFee = (_amount * pool.depositFeeBP) / 10000;
+                // We split this fee to feeAddress and Dragon Nest supporters - 90% 10%
+                _lpToken.safeTransfer(feeAddress, (depositFee * 9000) / 10000);
 
-            poolDragonNestInfo[_pid].pendingDepFee += (depositFee * 1000) / 10000;
+                poolDragonNestInfo[_pid].pendingDepFee += (depositFee * 1000) / 10000;
 
-            user.amount = user.amount + _amount - depositFee;
-            pool.lpSupply = pool.lpSupply + _amount - depositFee;
-        } else {
-            user.amount = user.amount + _amount;
-            pool.lpSupply = pool.lpSupply + _amount;
+                user.amount = user.amount + _amount - depositFee;
+                pool.lpSupply = pool.lpSupply + _amount - depositFee;
+            } else {
+                user.amount = user.amount + _amount;
+                pool.lpSupply = pool.lpSupply + _amount;
+            }
         }
 
         user.rewardDebt = (user.amount * pool.accDCAUPerShare) / 1e12;
@@ -410,5 +418,14 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         IERC721 _dragonUtility = IERC721(DRAGON_UTILITY);
         _dragonUtility.safeTransferFrom(address(this), msg.sender, tokenId);
         nestSupportersLength--;
+    }
+
+    // View function to see pending DragonGols on frontend.
+    function pendingDcauOfDragonNest(uint _pid, uint _tokenId) external view returns (uint256) {
+        PoolDragonNestInfo storage poolDragonNest = poolDragonNestInfo[_pid];
+        uint256 _pendingDepFee = poolDragonNest.pendingDepFee;
+        uint accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;
+
+        return accDepFeePerShare - dragonNestInfo[_pid][_tokenId];
     }
 }
