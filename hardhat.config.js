@@ -128,7 +128,7 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: true,
-    runOnCompile: true
+    runOnCompile: true,
   },
   solidity: {
     version: "0.8.0",
@@ -138,5 +138,8 @@ module.exports = {
         runs: 500,
       },
     },
+  },
+  mocha: {
+    timeout: 3000000,
   },
 };

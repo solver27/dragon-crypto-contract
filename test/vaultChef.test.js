@@ -7,6 +7,8 @@ const {
   WETH,
   createPair,
   createPairETH,
+  advanceBlock,
+  advanceTimeStamp,
 } = require("../scripts/shared");
 
 const MASTER_CHEF_DGNG_PER_BLOCK = getBigNumber(5, 16); // 0.05 dgng per block
@@ -29,6 +31,8 @@ describe("Vault", function () {
     this.dev = this.signers[0];
     this.bob = this.signers[1];
     this.devWallet = this.signers[2];
+    this.withdrawFeeAddress = this.signers[3];
+    this.feeAddress = this.signers[4];
   });
 
   beforeEach(async function () {
@@ -79,6 +83,11 @@ describe("Vault", function () {
 
       this.dgngPoolId = 0;
       this.strategyMasterChefDGNG = await this.StrategyMasterChef.deploy(
+        [
+          this.dgng.address,
+          this.withdrawFeeAddress.address,
+          this.feeAddress.address,
+        ],
         this.vaultChef.address,
         this.masterChef.address,
         QUICK_SWAP.ROUTER,
@@ -152,6 +161,38 @@ describe("Vault", function () {
         userInfoBefore.sub(getBigNumber(testWithdrawAmount))
       );
     });
+
+    it("Vault earn", async function () {
+      await this.vaultChef.addPool(this.strategyMasterChefDGNG.address);
+      await this.dgng.approve(this.vaultChef.address, getBigNumber(1000000000));
+
+      const testDepositAmount = 200;
+      const testWithdrawAmount = 50;
+      await this.vaultChef.deposit(
+        this.dgngPoolId,
+        getBigNumber(testDepositAmount)
+      );
+
+      await advanceBlock();
+      await advanceTimeStamp(10);
+
+      await this.vaultChef.withdraw(
+        this.dgngPoolId,
+        getBigNumber(testWithdrawAmount)
+      );
+
+      const earnedAmountBefore = await this.dgng.balanceOf(
+        this.strategyMasterChefDGNG.address
+      );
+
+      expect(earnedAmountBefore).to.not.equal(0);
+      await this.strategyMasterChefDGNG.earn();
+
+      const earnedAmountAfter = await this.dgng.balanceOf(
+        this.strategyMasterChefDGNG.address
+      );
+      expect(earnedAmountAfter).to.be.equal(0);
+    });
   });
 
   describe("StrategyMasterChefLP", function () {
@@ -162,6 +203,11 @@ describe("Vault", function () {
       this.dgngMaticPoolId = 0;
       this.strategyMasterChefLPDGNG_WMATIC =
         await this.StrategyMasterChefLP.deploy(
+          [
+            this.dgng.address,
+            this.withdrawFeeAddress.address,
+            this.feeAddress.address,
+          ],
           this.vaultChef.address,
           this.masterChef.address,
           QUICK_SWAP.ROUTER,

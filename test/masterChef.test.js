@@ -5,6 +5,7 @@ const {
   DCAU_PRE_MINT,
   getBigNumber,
   advanceBlock,
+  advanceTimeStamp,
 } = require("../scripts/shared");
 
 const DCAU_PER_BLOCK = getBigNumber(5, 16); // 0.05 dcau per block
@@ -84,7 +85,7 @@ describe("MasterChef", function () {
     it("Should revert if invalid pool", async function () {
       await expect(
         this.masterChef.set(2, 60 * 100, 100, false)
-      ).to.be.revertedWith("Transaction reverted without a reason string");
+      ).to.be.revertedWith("Dragon: Non-existent pool");
     });
   });
 
@@ -100,16 +101,7 @@ describe("MasterChef", function () {
       ).wait();
 
       await advanceBlock();
-      const currentDate = new Date();
-      const afterThreeHours = new Date(
-        currentDate.setDate(currentDate.getHours() + 3) //After 3 hours
-      );
-      const afterThreeHoursTimeStampUTC =
-        new Date(afterThreeHours.toUTCString()).getTime() / 1000;
-      network.provider.send("evm_setNextBlockTimestamp", [
-        afterThreeHoursTimeStampUTC,
-      ]);
-      await network.provider.send("evm_mine");
+      await advanceTimeStamp(3);
       const log2 = await this.masterChef.updatePool(0);
       await advanceBlock();
 
@@ -137,12 +129,6 @@ describe("MasterChef", function () {
       await this.dcau.approve(
         this.masterChef.address,
         getBigNumber(1000000000000000)
-      );
-    });
-
-    it("Should not allow to deposit 0 amount", async function () {
-      await expect(this.masterChef.deposit(0, 0)).to.be.revertedWith(
-        "Dragon: ZERO_VALUE"
       );
     });
 
