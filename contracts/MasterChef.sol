@@ -252,7 +252,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
             // We are considering tokens which takes accounts fees when trasnsferring such like reflect finance
             IERC20 _lpToken = pool.lpToken;
             {
-                uint balnceBefore = _lpToken.balanceOf(address(this)); 
+                uint256 balnceBefore = _lpToken.balanceOf(address(this));
                 _lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
                 _amount = _lpToken.balanceOf(address(this)) - balnceBefore;
                 require(_amount > 0, "We only accept amount > 0");
@@ -421,10 +421,10 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     }
 
     // View function to see pending DragonGols on frontend.
-    function pendingDcauOfDragonNest(uint _pid, uint _tokenId) external view returns (uint256) {
+    function pendingDcauOfDragonNest(uint256 _pid, uint256 _tokenId) external view returns (uint256) {
         PoolDragonNestInfo storage poolDragonNest = poolDragonNestInfo[_pid];
         uint256 _pendingDepFee = poolDragonNest.pendingDepFee;
-        uint accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;
+        uint256 accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;
 
         return accDepFeePerShare - dragonNestInfo[_pid][_tokenId];
     }

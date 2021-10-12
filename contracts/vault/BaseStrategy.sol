@@ -19,9 +19,9 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     address public earnedAddress;
 
     address public uniRouterAddress;
-    address public constant dgngAddress = 0x3a3Df212b7AA91Aa0402B9035b098891d276572B;
-    address public constant withdrawFeeAddress = 0x4879712c5D1A98C0B88Fb700daFF5c65d12Fd729;
-    address public constant feeAddress = 0x1cb757f1eB92F25A917CE9a92ED88c1aC0734334;
+    address public dgngAddress;
+    address public withdrawFeeAddress;
+    address public feeAddress;
     address public vaultChefAddress;
     address public govAddress;
 

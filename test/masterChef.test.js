@@ -5,6 +5,7 @@ const {
   DCAU_PRE_MINT,
   getBigNumber,
   advanceBlock,
+  advanceTimeStamp,
 } = require("../scripts/shared");
 
 const DCAU_PER_BLOCK = getBigNumber(5, 16); // 0.05 dcau per block
@@ -100,16 +101,7 @@ describe("MasterChef", function () {
       ).wait();
 
       await advanceBlock();
-      const currentDate = new Date();
-      const afterThreeHours = new Date(
-        currentDate.setDate(currentDate.getHours() + 3) //After 3 hours
-      );
-      const afterThreeHoursTimeStampUTC =
-        new Date(afterThreeHours.toUTCString()).getTime() / 1000;
-      network.provider.send("evm_setNextBlockTimestamp", [
-        afterThreeHoursTimeStampUTC,
-      ]);
-      await network.provider.send("evm_mine");
+      await advanceTimeStamp(3);
       const log2 = await this.masterChef.updatePool(0);
       await advanceBlock();
 

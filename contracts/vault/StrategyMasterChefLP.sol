@@ -16,6 +16,7 @@ contract StrategyMasterChefLP is BaseStrategyLPSingle {
     uint256 public pid; // MasterChef pool id
 
     constructor(
+        address[] memory _initialWalletPath,
         address _vaultChefAddress,
         address _masterchefAddress,
         address _uniRouterAddress,
@@ -28,6 +29,9 @@ contract StrategyMasterChefLP is BaseStrategyLPSingle {
         address[] memory _earnedToToken1Path
     ) {
         govAddress = msg.sender;
+        dgngAddress = _initialWalletPath[0];
+        withdrawFeeAddress = _initialWalletPath[1];
+        feeAddress = _initialWalletPath[2];
         vaultChefAddress = _vaultChefAddress;
         masterchefAddress = _masterchefAddress;
         uniRouterAddress = _uniRouterAddress;
