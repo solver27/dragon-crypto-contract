@@ -8,14 +8,12 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./interfaces/IDragonGol.sol";
+import "./interfaces/IDCAU.sol";
 
-import "hardhat/console.sol";
-
-// MasterChef is the master of DragonGold. He can make DragonGold and he is a fair guy.
+// MasterChef is the master of DCAU(Dragon Crypto Aurum). He can make DCAU and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
-// will be transferred to a governance smart contract once DragonGold is sufficiently
+// will be transferred to a governance smart contract once DCAU is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
@@ -27,7 +25,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
         //
-        // We do some fancy math here. Basically, any point in time, the amount of DrgonGols
+        // We do some fancy math here. Basically, any point in time, the amount of DCAUs
         // entitled to a user but is pending to be distributed is:
         //
         //   pending reward = (user.amount * pool.accDCAUPerShare) - user.rewardDebt
@@ -42,9 +40,9 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     // Info of each pool.
     struct PoolInfo {
         IERC20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. DragonGols to distribute per block. 100 - 1point
-        uint256 lastRewardTime; // Last block timestamp that DragonGols distribution occurs.
-        uint256 accDCAUPerShare; // Accumulated DrgonGols per share, times 1e12. See below.
+        uint256 allocPoint; // How many allocation points assigned to this pool. DCAUs to distribute per block. 100 - 1point
+        uint256 lastRewardTime; // Last block timestamp that DCAUs distribution occurs.
+        uint256 accDCAUPerShare; // Accumulated DCAUs per share, times 1e12. See below.
         uint16 depositFeeBP; // Deposit fee in basis points 10000 - 100%
         uint256 lpSupply;
     }
@@ -149,7 +147,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         emit AddPool(poolInfo.length - 1, address(_lpToken), _allocPoint, _depositFeeBP);
     }
 
-    // Update the given pool's DragonGol allocation point and deposit fee. Can only be called by the owner.
+    // Update the given pool's DCAU allocation point and deposit fee. Can only be called by the owner.
     function set(
         uint256 _pid,
         uint256 _allocPoint,
@@ -179,7 +177,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         else return (_to - _from) / 15;
     }
 
-    // View function to see pending DragonGols on frontend.
+    // View function to see pending DCAUs on frontend.
     function pendingDcau(uint256 _pid, address _user) external view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
@@ -225,11 +223,11 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         // 2.5% to dev 97.5% to user
         uint256 dcauRewardUser = (dcauReward * 975) / 1000;
         if (dcauReward > 0) {
-            IDragonGol(dcau).mint(address(this), dcauRewardUser);
-            IDragonGol(dcau).mint(devWallet, dcauReward - dcauRewardUser);
+            IDCAU(dcau).mint(address(this), dcauRewardUser);
+            IDCAU(dcau).mint(devWallet, dcauReward - dcauRewardUser);
         }
 
-        // The first time we reach DragonGol's max supply we solidify the end of farming.
+        // The first time we reach DCAU's max supply we solidify the end of farming.
         if (IERC20(dcau).totalSupply() >= dcauMaximumSupply && emissionEndTime == type(uint256).max)
             emissionEndTime = block.timestamp;
 
@@ -237,7 +235,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         pool.lastRewardTime = block.timestamp;
     }
 
-    // Deposit LP tokens to MasterChef for DragonGol allocation.
+    // Deposit LP tokens to MasterChef for DCAU allocation.
     function deposit(uint256 _pid, uint256 _amount) external nonReentrant {
         require(_pid < poolInfo.length, "Dragon: Non-existent pool");
         PoolInfo storage pool = poolInfo[_pid];
@@ -422,7 +420,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         nestSupportersLength--;
     }
 
-    // View function to see pending DragonGols on frontend.
+    // View function to see pending DCAUs on frontend.
     function pendingDcauOfDragonNest(uint256 _pid, uint256 _tokenId) external view returns (uint256) {
         PoolDragonNestInfo storage poolDragonNest = poolDragonNestInfo[_pid];
         uint256 _pendingDepFee = poolDragonNest.pendingDepFee;

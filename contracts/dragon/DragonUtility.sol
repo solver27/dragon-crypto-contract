@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../libraries/TransferHelper.sol";
 
-// import "hardhat/console.sol";
-
 contract DragonUtility is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 

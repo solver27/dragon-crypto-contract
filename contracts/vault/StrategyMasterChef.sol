@@ -25,8 +25,9 @@ contract StrategyMasterChef is BaseStrategy {
         address _earnedAddress,
         address[] memory _earnedToWmaticPath
     ) {
+        require(_initialWalletPath.length == 3, "Parameter _initialWalletPath length shoud be 3");
         govAddress = msg.sender;
-        dgngAddress = _initialWalletPath[0];
+        dcauAddress = _initialWalletPath[0];
         withdrawFeeAddress = _initialWalletPath[1];
         feeAddress = _initialWalletPath[2];
         vaultChefAddress = _vaultChefAddress;

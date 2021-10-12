@@ -24,12 +24,13 @@ contract StrategyMasterChefLP is BaseStrategyLPSingle {
         address _wantAddress, // the token which we want to put in pool
         address _earnedAddress,
         address[] memory _earnedToWmaticPath,
-        address[] memory _earnedToDgngPath,
+        address[] memory _earnedToDcauPath,
         address[] memory _earnedToToken0Path,
         address[] memory _earnedToToken1Path
     ) {
+        require(_initialWalletPath.length == 3, "Parameter _initialWalletPath length shoud be 3");
         govAddress = msg.sender;
-        dgngAddress = _initialWalletPath[0];
+        dcauAddress = _initialWalletPath[0];
         withdrawFeeAddress = _initialWalletPath[1];
         feeAddress = _initialWalletPath[2];
         vaultChefAddress = _vaultChefAddress;
@@ -44,7 +45,7 @@ contract StrategyMasterChefLP is BaseStrategyLPSingle {
         earnedAddress = _earnedAddress;
 
         earnedToWmaticPath = _earnedToWmaticPath;
-        earnedToDgngPath = _earnedToDgngPath;
+        earnedToDcauPath = _earnedToDcauPath;
         earnedToToken0Path = _earnedToToken0Path;
         earnedToToken1Path = _earnedToToken1Path;
 
