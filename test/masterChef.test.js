@@ -85,7 +85,7 @@ describe("MasterChef", function () {
     it("Should revert if invalid pool", async function () {
       await expect(
         this.masterChef.set(2, 60 * 100, 100, false)
-      ).to.be.revertedWith("Transaction reverted without a reason string");
+      ).to.be.revertedWith("Dragon: Non-existent pool");
     });
   });
 
@@ -129,12 +129,6 @@ describe("MasterChef", function () {
       await this.dcau.approve(
         this.masterChef.address,
         getBigNumber(1000000000000000)
-      );
-    });
-
-    it("Should not allow to deposit 0 amount", async function () {
-      await expect(this.masterChef.deposit(0, 0)).to.be.revertedWith(
-        "Dragon: ZERO_VALUE"
       );
     });
 

@@ -157,6 +157,8 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         bool _withUpdate
     ) external onlyOwner {
         require(_depositFeeBP <= 401, "set: invalid deposit fee basis points");
+        require(_pid < poolInfo.length, "Dragon: Non-existent pool");
+
         if (_withUpdate) {
             massUpdatePools();
         }
