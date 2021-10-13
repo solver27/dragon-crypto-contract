@@ -57,15 +57,15 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     mapping(uint256 => address) nestSupporters; // tokenId => nest supporter;
     uint256 public nestSupportersLength;
 
-    uint256 public constant dcauMaximumSupply = 146300 * (10**18);
+    uint256 public constant dcauMaximumSupply = 155000 * (10**18);
 
-    // The Dragon Gold TOKEN!
-    address public dcau;
-    uint256 public dcauPerBlock;
+    // The Dragon Cyrpto AU TOKEN!
+    address public immutable dcau;
+    uint256 public dcauPerSecond;
     address public immutable DRAGON_UTILITY;
     // Deposit Fee address
-    address public feeAddress;
-
+    address public immutable FEEADDRESS;
+    address public immutable GAMEADDRESS;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -77,7 +77,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     // The time when Dragon mining ends.
     uint256 public emissionEndTime = type(uint256).max;
 
-    address public devWallet;
+    address public immutable DEVADDRESS;
 
     event AddPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
     event SetPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
@@ -86,23 +86,27 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event SetFeeAddress(address indexed user, address indexed newAddress);
     event UpdateStartBlock(uint256 newStartBlock);
-    event SetDCAUPerBlock(uint256 amount);
+    event SetDCAUPerSecond(uint256 amount);
     event SetEmissionEndTime(uint256 emissionEndTime);
+    event DragonNestStaked( address indexed user, uint256 indexed tokenId );
+    event DragonNestWithdrawn( address indexed user, uint256 indexed tokenId );
 
     constructor(
         address _dcau,
         address _DRAGON_UTILITY,
+        address _gameAddress,
         address _feeAddress,
         uint256 _startTime,
-        uint256 _dcauPerBlock,
-        address _devWallet
+        uint256 _dcauPerSecond,
+        address _devAddress
     ) {
         dcau = _dcau;
         DRAGON_UTILITY = _DRAGON_UTILITY;
-        feeAddress = _feeAddress;
+        FEEADDRESS = _feeAddress;
         startTime = _startTime;
-        dcauPerBlock = _dcauPerBlock;
-        devWallet = _devWallet;
+        dcauPerSecond = _dcauPerSecond;
+        DEVADDRESS = _devAddress;
+        GAMEADDRESS = _gameAddress;
     }
 
     function poolLength() external view returns (uint256) {
@@ -171,10 +175,10 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
         // As we set the multiplier to 0 here after emissionEndTime
         // deposits aren't blocked after farming ends.
-        // reward every 15 seconds
+        // reward every 1 seconds
         if (_from > emissionEndTime) return 0;
-        if (_to > emissionEndTime) return (emissionEndTime - _from) / 15;
-        else return (_to - _from) / 15;
+        if (_to > emissionEndTime) return (emissionEndTime - _from);
+        else return (_to - _from);
     }
 
     // View function to see pending DCAUs on frontend.
@@ -182,11 +186,11 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
         uint256 accDcauPerShare = pool.accDCAUPerShare;
-        if (block.timestamp > pool.lastRewardTime && pool.lpSupply != 0) {
+        if (block.timestamp > pool.lastRewardTime && pool.lpSupply != 0 && totalAllocPoint > 0) {
             uint256 multiplier = getMultiplier(pool.lastRewardTime, block.timestamp);
-            uint256 dcauReward = (multiplier * dcauPerBlock * pool.allocPoint) / totalAllocPoint;
-            uint256 dcauRewardUser = (dcauReward * 975) / 1000;
-            accDcauPerShare = accDcauPerShare + ((dcauRewardUser * 1e12) / pool.lpSupply);
+            uint256 dcauReward = (multiplier * dcauPerSecond * pool.allocPoint) / totalAllocPoint;
+            
+            accDcauPerShare = accDcauPerShare + ((dcauReward * 1e12) / pool.lpSupply);
         }
 
         return ((user.amount * accDcauPerShare) / 1e12) - user.rewardDebt;
@@ -213,25 +217,41 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         }
 
         uint256 multiplier = getMultiplier(pool.lastRewardTime, block.timestamp);
-        uint256 dcauReward = (multiplier * dcauPerBlock * pool.allocPoint) / totalAllocPoint;
+        uint256 dcauReward = (multiplier * dcauPerSecond * pool.allocPoint) / totalAllocPoint;
+        uint256 dcauTotalSupply = IERC20(dcau).totalSupply();
+
+        uint256 gameDevDcauReward = dcauReward / 15;
 
         // This shouldn't happen, but just in case we stop rewards.
-        if (IERC20(dcau).totalSupply() > dcauMaximumSupply) dcauReward = 0;
-        else if ((IERC20(dcau).totalSupply() + dcauReward) > dcauMaximumSupply)
-            dcauReward = dcauMaximumSupply - IERC20(dcau).totalSupply();
-
-        // 2.5% to dev 97.5% to user
-        uint256 dcauRewardUser = (dcauReward * 975) / 1000;
+        if (dcauTotalSupply > dcauMaximumSupply)
+        {
+            dcauReward = 0;
+            gameDevDcauReward = 0;
+        } 
+        else if ((dcauTotalSupply + dcauReward ) > dcauMaximumSupply)
+        {
+            uint256 dcauSupplyRemaining = dcauMaximumSupply - dcauTotalSupply;
+            dcauReward = dcauSupplyRemaining * 15/16;
+            gameDevDcauReward = dcauSupplyRemaining - dcauReward;
+        }
+        
         if (dcauReward > 0) {
-            IDCAU(dcau).mint(address(this), dcauRewardUser);
-            IDCAU(dcau).mint(devWallet, dcauReward - dcauRewardUser);
+            IDCAU(dcau).mint(address(this), dcauReward);
+        }
+
+        if( gameDevDcauReward > 0){
+            uint256 devReward = gameDevDcauReward * 1/3;
+            uint256 gameReward = gameDevDcauReward - devReward;
+
+            IDCAU(dcau).mint(DEVADDRESS, devReward );
+            IDCAU(dcau).mint(GAMEADDRESS, gameReward );
         }
 
         // The first time we reach DCAU's max supply we solidify the end of farming.
-        if (IERC20(dcau).totalSupply() >= dcauMaximumSupply && emissionEndTime == type(uint256).max)
+        if (dcauTotalSupply >= dcauMaximumSupply && emissionEndTime == type(uint256).max)
             emissionEndTime = block.timestamp;
 
-        pool.accDCAUPerShare = pool.accDCAUPerShare + ((dcauRewardUser * 1e12) / pool.lpSupply);
+        pool.accDCAUPerShare = pool.accDCAUPerShare + ((dcauReward * 1e12) / pool.lpSupply);
         pool.lastRewardTime = block.timestamp;
     }
 
@@ -261,7 +281,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
             if (pool.depositFeeBP > 0) {
                 uint256 depositFee = (_amount * pool.depositFeeBP) / 10000;
                 // We split this fee to feeAddress and Dragon Nest supporters - 90% 10%
-                _lpToken.safeTransfer(feeAddress, (depositFee * 9000) / 10000);
+                _lpToken.safeTransfer(FEEADDRESS, (depositFee * 9000) / 10000);
 
                 poolDragonNestInfo[_pid].pendingDepFee += (depositFee * 1000) / 10000;
 
@@ -325,24 +345,18 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         require(transferSuccess, "safeDcauTransfer: transfer failed");
     }
 
-    function setFeeAddress(address _feeAddress) external onlyOwner {
-        require(_feeAddress != address(0), "!nonzero");
-        feeAddress = _feeAddress;
-        emit SetFeeAddress(msg.sender, _feeAddress);
-    }
-
     function setStartTime(uint256 _newStartTime) external onlyOwner {
         require(poolInfo.length == 0, "no changing startTime after pools have been added");
-        require(block.timestamp < startTime, "cannot change start block if sale has already commenced");
-        require(block.timestamp < _newStartTime, "cannot set start block in the past");
+        require(block.timestamp < startTime, "cannot change start time if sale has already commenced");
+        require(block.timestamp < _newStartTime, "cannot set start time in the past");
         startTime = _newStartTime;
 
         emit UpdateStartBlock(startTime);
     }
 
-    function setDcauPerBlock(uint256 _dcauPerBlock) external onlyOwner {
-        dcauPerBlock = _dcauPerBlock;
-        emit SetDCAUPerBlock(_dcauPerBlock);
+    function setDcauPerSecond(uint256 _dcauPerSecond) external onlyOwner {
+        dcauPerSecond = _dcauPerSecond;
+        emit SetDCAUPerSecond(_dcauPerSecond);
     }
 
     function setEmissionEndTime(uint256 _emissionEndTime) external onlyOwner {
@@ -398,6 +412,8 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         _dragonUtility.safeTransferFrom(msg.sender, address(this), tokenId);
         nestSupporters[tokenId] = msg.sender;
         nestSupportersLength++;
+
+        emit DragonNestStaked(msg.sender, tokenId);
     }
 
     function withdrawDragonUtility(uint256 tokenId) external nonReentrant {
@@ -418,6 +434,8 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         IERC721 _dragonUtility = IERC721(DRAGON_UTILITY);
         _dragonUtility.safeTransferFrom(address(this), msg.sender, tokenId);
         nestSupportersLength--;
+
+         emit DragonNestWithdrawn(msg.sender, tokenId);
     }
 
     // View function to see pending DCAUs on frontend.
@@ -427,5 +445,11 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         uint256 accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;
 
         return accDepFeePerShare - dragonNestInfo[_pid][_tokenId];
+    }
+
+    function stakedAddressForDragonNest( uint256 _tokenId ) external view returns( address )
+    {
+        require( _tokenId <= 25, "token does not exist" );
+        return nestSupporters[_tokenId];
     }
 }
