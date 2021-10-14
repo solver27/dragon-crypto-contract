@@ -14,7 +14,9 @@ const DCAU_REWARD_PERIOD = 15; // reward every 15 seconds
 describe("MasterChef", function () {
   before(async function () {
     this.MasterChef = await ethers.getContractFactory("MasterChef");
-    this.DragonUtility = await ethers.getContractFactory("DragonUtility");
+    this.DragonNestSupporter = await ethers.getContractFactory(
+      "DragonNestSupporter"
+    );
     this.MockDCAU = await ethers.getContractFactory("MockDCAU");
     this.MockERC20 = await ethers.getContractFactory("MockERC20");
     this.signers = await ethers.getSigners();
@@ -41,14 +43,16 @@ describe("MasterChef", function () {
       "MockLink",
       getBigNumber(100000000)
     );
-    this.dragonUtility = await this.DragonUtility.deploy(
+    this.dragonNestSupporter = await this.DragonNestSupporter.deploy(
       this.devWallet.address,
-      this.usdc.address
+      this.usdc.address,
+      ~~(new Date().getTime / (1000 * 2))
     );
 
     this.masterChef = await this.MasterChef.deploy(
       this.dcau.address,
-      this.dragonUtility.address,
+      this.dragonNestSupporter.address,
+      this.devWallet.address, // game address
       this.dev.address,
       0,
       DCAU_PER_BLOCK, // 0.05 DCAU
@@ -201,41 +205,42 @@ describe("MasterChef", function () {
     });
   });
 
-  describe("stakeDragonUtility", function () {
+  describe("stakeDragonNest", function () {
     beforeEach(async function () {
-      this.usedUtilityNFTId = 1;
+      this.usedNestNFTId = 1;
 
       await this.masterChef.add(5000, this.dcau.address, 0, false);
       await this.dcau.approve(
         this.masterChef.address,
         getBigNumber(1000000000000000)
       );
-      await this.dragonUtility.mintUtility("https://xxxxx");
-      await this.dragonUtility.buyDragonUtility(this.usedUtilityNFTId);
+      await this.dragonNestSupporter.mintItem("https://xxxxx");
+      await this.dragonNestSupporter.activateSale();
+      await this.dragonNestSupporter.buyDragonNest();
     });
 
-    it("Should stake dragon utility", async function () {
-      const dragonUtilityOwnerBefore = await this.dragonUtility.ownerOf(
-        this.usedUtilityNFTId
+    it("Should stake dragon nest", async function () {
+      const dragonNestOwnerBefore = await this.dragonNestSupporter.ownerOf(
+        this.usedNestNFTId
       );
-      expect(dragonUtilityOwnerBefore).to.be.equal(this.alice.address);
+      expect(dragonNestOwnerBefore).to.be.equal(this.alice.address);
 
-      await this.dragonUtility.approve(
+      await this.dragonNestSupporter.approve(
         this.masterChef.address,
-        this.usedUtilityNFTId
+        this.usedNestNFTId
       );
-      await this.masterChef.stakeDragonUtility(this.usedUtilityNFTId);
+      await this.masterChef.stakeDragonNest(this.usedNestNFTId);
 
-      const dragonUtilityOwnerAfter = await this.dragonUtility.ownerOf(
-        this.usedUtilityNFTId
+      const dragonNestOwnerAfter = await this.dragonNestSupporter.ownerOf(
+        this.usedNestNFTId
       );
-      expect(dragonUtilityOwnerAfter).to.be.equal(this.masterChef.address);
+      expect(dragonNestOwnerAfter).to.be.equal(this.masterChef.address);
     });
   });
 
-  describe("withdrawDragonUtility", function () {
+  describe("withdrawDragonNest", function () {
     beforeEach(async function () {
-      this.usedUtilityNFTId = 1;
+      this.usedNestNFTId = 1;
 
       await this.masterChef.add(5000, this.dcau.address, 0, false);
       await this.masterChef.add(500, this.usdc.address, 400, false);
@@ -263,20 +268,21 @@ describe("MasterChef", function () {
         .approve(this.masterChef.address, getBigNumber(2000));
       await this.masterChef.connect(this.bob).deposit(1, getBigNumber(2000));
 
-      await this.dragonUtility.mintUtility("https://xxxxx");
-      await this.dragonUtility.buyDragonUtility(this.usedUtilityNFTId);
-      await this.dragonUtility.approve(
+      await this.dragonNestSupporter.mintItem("https://xxxxx");
+      await this.dragonNestSupporter.activateSale();
+      await this.dragonNestSupporter.buyDragonNest();
+      await this.dragonNestSupporter.approve(
         this.masterChef.address,
-        this.usedUtilityNFTId
+        this.usedNestNFTId
       );
-      await this.masterChef.stakeDragonUtility(this.usedUtilityNFTId);
+      await this.masterChef.stakeDragonNest(this.usedNestNFTId);
     });
 
-    it("Should withdraw dragon utility", async function () {
-      const dragonUtilityOwnerBefore = await this.dragonUtility.ownerOf(
-        this.usedUtilityNFTId
+    it("Should withdraw dragon nest", async function () {
+      const dragonNestOwnerBefore = await this.dragonNestSupporter.ownerOf(
+        this.usedNestNFTId
       );
-      expect(dragonUtilityOwnerBefore).to.be.equal(this.masterChef.address);
+      expect(dragonNestOwnerBefore).to.be.equal(this.masterChef.address);
 
       const poolLen = await this.masterChef.poolLength();
       const poolInfoBefore = [];
@@ -289,7 +295,7 @@ describe("MasterChef", function () {
         poolInfoBefore.push({ balanceBefore });
       }
 
-      await this.masterChef.withdrawDragonUtility(this.usedUtilityNFTId);
+      await this.masterChef.withdrawDragonNest(this.usedNestNFTId);
 
       for (let i = 0; i < poolLen; i++) {
         const poolInfo = await this.masterChef.poolInfo(i);
@@ -315,10 +321,10 @@ describe("MasterChef", function () {
         );
       }
 
-      const dragonUtilityOwnerAfter = await this.dragonUtility.ownerOf(
-        this.usedUtilityNFTId
+      const dragonNestOwnerAfter = await this.dragonNestSupporter.ownerOf(
+        this.usedNestNFTId
       );
-      expect(dragonUtilityOwnerAfter).to.be.equal(this.alice.address);
+      expect(dragonNestOwnerAfter).to.be.equal(this.alice.address);
     });
 
     it("updatePoolDragonNest -1", async function () {

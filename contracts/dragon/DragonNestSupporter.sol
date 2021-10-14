@@ -8,10 +8,9 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../libraries/TransferHelper.sol";
 
 contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
-
     using Counters for Counters.Counter;
 
-    event Sold( address indexed buyer, uint256 indexed tokenId );
+    event Sold(address indexed buyer, uint256 indexed tokenId);
 
     Counters.Counter private _tokenIds;
 
@@ -21,15 +20,19 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     address payable private immutable _devWallet;
     uint256 private _itemCost;
 
-    mapping( address => bool ) _whitelist;
+    mapping(address => bool) _whitelist;
 
-    mapping( address => uint256 ) _whitelistAllowance;
+    mapping(address => uint256) _whitelistAllowance;
 
     bool private _isSaleActive;
 
     uint256 public PUBLICSALETIMESTAMP;
 
-    constructor(address payable devWallet_, address _stableToken, uint256 _publicSaleOpenTimestamp) ERC721("Dragon Nest Supporters", "DCNS") {
+    constructor(
+        address payable devWallet_,
+        address _stableToken,
+        uint256 _publicSaleOpenTimestamp
+    ) ERC721("Dragon Nest Supporters", "DCNS") {
         _devWallet = devWallet_;
         STABLETOKEN = _stableToken;
         PUBLICSALETIMESTAMP = _publicSaleOpenTimestamp;
@@ -43,18 +46,18 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
         return _itemCost;
     }
 
-    function addWhiteList( address whitelistAddress ) external onlyOwner{
-        require( _whitelistAllowance[whitelistAddress] < 2, "already has 2 in allowance" );
+    function addWhiteList(address whitelistAddress) external onlyOwner {
+        require(_whitelistAllowance[whitelistAddress] < 2, "already has 2 in allowance");
 
         _whitelist[whitelistAddress] = true;
         _whitelistAllowance[whitelistAddress]++;
     }
 
-    function activateSale( ) external onlyOwner{
+    function activateSale() external onlyOwner {
         _isSaleActive = true;
     }
 
-    function mintUtility(string memory tokenURI) external onlyOwner returns (uint256) {
+    function mintItem(string memory tokenURI) external onlyOwner returns (uint256) {
         require(_tokenIds.current() < 25, "All tokens have been minted");
 
         _tokenIds.increment();
@@ -67,23 +70,21 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     function buyDragonNest() external nonReentrant {
         require(balanceOf(_msgSender()) < 2, "Dragon:Forbidden");
-        require( _isSaleActive, "sale must be active" );
-        require( _currentSaleId.current() < 25, "all tokens sold" );
+        require(_isSaleActive, "sale must be active");
+        require(_currentSaleId.current() < 25, "all tokens sold");
 
-        if( block.timestamp < PUBLICSALETIMESTAMP )
-        {
-            require( _whitelist[msg.sender], "Not in whitelist" );
-            require( _whitelistAllowance[msg.sender] > 0, "must have purchases left" );
-        } 
+        if (block.timestamp < PUBLICSALETIMESTAMP) {
+            require(_whitelist[msg.sender], "Not in whitelist");
+            require(_whitelistAllowance[msg.sender] > 0, "must have purchases left");
+        }
 
         _currentSaleId.increment();
-        
+
         TransferHelper.safeTransferFrom(STABLETOKEN, _msgSender(), _devWallet, _itemCost);
 
         _safeTransfer(address(this), msg.sender, _currentSaleId.current(), "");
 
-        if( block.timestamp < PUBLICSALETIMESTAMP )
-        {
+        if (block.timestamp < PUBLICSALETIMESTAMP) {
             _whitelistAllowance[msg.sender]--;
         }
 
