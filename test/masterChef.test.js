@@ -8,8 +8,7 @@ const {
   advanceTimeStamp,
 } = require("../scripts/shared");
 
-const DCAU_PER_BLOCK = getBigNumber(5, 16); // 0.05 dcau per block
-const DCAU_REWARD_PERIOD = 15; // reward every 15 seconds
+const DCAU_PER_SECOND = getBigNumber(5, 16); // 0.05 dcau per block
 
 describe("MasterChef", function () {
   before(async function () {
@@ -20,10 +19,12 @@ describe("MasterChef", function () {
     this.MockDCAU = await ethers.getContractFactory("MockDCAU");
     this.MockERC20 = await ethers.getContractFactory("MockERC20");
     this.signers = await ethers.getSigners();
-    this.alice = this.signers[0];
-    this.bob = this.signers[1];
-    this.devWallet = this.signers[2];
+
     this.dev = this.signers[0];
+    this.devWallet = this.signers[1];
+    this.game = this.signers[2];
+    this.alice = this.signers[3];
+    this.bob = this.signers[4];
   });
 
   beforeEach(async function () {
@@ -44,7 +45,7 @@ describe("MasterChef", function () {
       getBigNumber(100000000)
     );
     this.dragonNestSupporter = await this.DragonNestSupporter.deploy(
-      this.devWallet.address,
+      this.dev.address,
       this.usdc.address,
       ~~(new Date().getTime / (1000 * 2))
     );
@@ -52,11 +53,10 @@ describe("MasterChef", function () {
     this.masterChef = await this.MasterChef.deploy(
       this.dcau.address,
       this.dragonNestSupporter.address,
-      this.devWallet.address, // game address
-      this.dev.address,
-      0,
-      DCAU_PER_BLOCK, // 0.05 DCAU
+      this.game.address, // game address
       this.devWallet.address,
+      0,
+      DCAU_PER_SECOND, // 0.05 DCAU
       this.devWallet.address
     );
 
@@ -96,29 +96,25 @@ describe("MasterChef", function () {
 
   describe("Pending DCAU", function () {
     it("PendingDCAU should equal ExpectedDCAU", async function () {
-      await this.masterChef.add(5000, this.dcau.address, 0, false);
-      await this.dcau.approve(
-        this.masterChef.address,
-        getBigNumber(1000000000000000)
-      );
+      await this.masterChef.add(50000, this.dcau.address, 0, false);
+      await this.dcau
+        .connect(this.alice)
+        .approve(this.masterChef.address, getBigNumber(1000000000000000));
+      await this.dcau.transfer(this.alice.address, getBigNumber(10000));
+
       const log1 = await (
-        await this.masterChef.deposit(0, getBigNumber(1))
+        await this.masterChef.connect(this.alice).deposit(0, getBigNumber(1000))
       ).wait();
+      const block1 = await ethers.provider.getBlock(log1.blockHash);
 
-      await advanceBlock();
-      await advanceTimeStamp(3);
-      const log2 = await this.masterChef.updatePool(0);
-      await advanceBlock();
+      await advanceTimeStamp(1);
 
-      const block1 = await ethers.provider.getBlock(log1.blockNumber);
-      const block2 = await ethers.provider.getBlock(log2.blockNumber);
+      const log2 = await this.masterChef.connect(this.alice).updatePool(0);
+      const block2 = await ethers.provider.getBlock(log2.blockHash);
 
-      const expectedDCAU = DCAU_PER_BLOCK.mul(
-        ~~((block2.timestamp - block1.timestamp) / DCAU_REWARD_PERIOD)
-      )
-        .mul(975)
-        .div(1000);
-
+      const expectedDCAU = DCAU_PER_SECOND.mul(
+        ~~(block2.timestamp - block1.timestamp)
+      );
       const pendingDCAU = await this.masterChef.pendingDcau(
         0,
         this.alice.address
@@ -149,29 +145,34 @@ describe("MasterChef", function () {
 
     it("Withdraw 0 amount", async function () {
       await this.masterChef.add(5000, this.dcau.address, 0, false);
-      await this.dcau.approve(
-        this.masterChef.address,
-        getBigNumber(1000000000000000)
-      );
-      const depositLog = await this.masterChef.deposit(0, getBigNumber(1000));
+      await this.dcau
+        .connect(this.alice)
+        .approve(this.masterChef.address, getBigNumber(1000000000000000));
+      await this.dcau.transfer(this.alice.address, getBigNumber(10000));
 
-      await advanceBlock();
+      const depositLog = await (
+        await this.masterChef.connect(this.alice).deposit(0, getBigNumber(1000))
+      ).wait();
       const dcauBalanceBefore = await this.dcau.balanceOf(this.alice.address);
-      await advanceBlock();
-      const withdrawLog = await this.masterChef.withdraw(0, 0);
 
-      const block1 = await ethers.provider.getBlock(withdrawLog.blockNumber);
-      const block2 = await ethers.provider.getBlock(depositLog.blockNumber);
+      const block1 = await ethers.provider.getBlock(depositLog.blockNumber);
 
-      const expectedDCAU = DCAU_PER_BLOCK.mul(
-        ~~((block2.timestamp - block1.timestamp) / DCAU_REWARD_PERIOD)
-      )
-        .mul(975)
-        .div(1000);
+      await advanceTimeStamp(3);
+
+      const withdrawLog = await this.masterChef
+        .connect(this.alice)
+        .withdraw(0, getBigNumber(100));
+      const block2 = await ethers.provider.getBlock(withdrawLog.blockNumber);
+
+      const expectedDCAU = DCAU_PER_SECOND.mul(
+        ~~(block2.timestamp - block1.timestamp)
+      ); // Pending amount
 
       const dcauBalanceAfter = await this.dcau.balanceOf(this.alice.address);
 
-      expect(expectedDCAU.add(dcauBalanceBefore)).to.be.equal(dcauBalanceAfter);
+      expect(
+        expectedDCAU.add(dcauBalanceBefore).add(getBigNumber(100))
+      ).to.be.equal(dcauBalanceAfter);
     });
 
     // TODO should revert invalid pool
@@ -182,25 +183,30 @@ describe("MasterChef", function () {
 
     it("EmergencyWithdraw 0 amount", async function () {
       await this.masterChef.add(5000, this.dcau.address, 0, false);
-      await this.dcau.approve(
-        this.masterChef.address,
-        getBigNumber(1000000000000000)
-      );
+      await this.dcau
+        .connect(this.bob)
+        .approve(this.masterChef.address, getBigNumber(1000000000000000));
+      await this.dcau.transfer(this.bob.address, getBigNumber(10000));
+      const dcauBalanceBefore = await this.dcau.balanceOf(this.bob.address);
 
-      await advanceBlock();
-
+      await (
+        await this.masterChef.connect(this.bob).deposit(0, getBigNumber(1000))
+      ).wait();
       const userInfoBefore = await this.masterChef.userInfo(
         0,
-        this.alice.address
+        this.bob.address
       );
-      await expect(this.masterChef.emergencyWithdraw(0))
-        .to.emit(this.masterChef, "EmergencyWithdraw")
-        .withArgs(this.alice.address, 0, userInfoBefore.amount);
+      await advanceTimeStamp(10);
 
-      const userInfoAfter = await this.masterChef.userInfo(
-        0,
-        this.alice.address
-      );
+      await expect(this.masterChef.connect(this.bob).emergencyWithdraw(0))
+        .to.emit(this.masterChef, "EmergencyWithdraw")
+        .withArgs(this.bob.address, 0, userInfoBefore.amount);
+
+      const dcauBalanceAfter = await this.dcau.balanceOf(this.bob.address);
+
+      expect(dcauBalanceBefore).to.be.equal(dcauBalanceAfter);
+
+      const userInfoAfter = await this.masterChef.userInfo(0, this.bob.address);
       expect(userInfoAfter.amount).to.be.equal(0);
       expect(userInfoAfter.rewardDebt).to.be.equal(0);
     });
@@ -224,7 +230,7 @@ describe("MasterChef", function () {
       const dragonNestOwnerBefore = await this.dragonNestSupporter.ownerOf(
         this.usedNestNFTId
       );
-      expect(dragonNestOwnerBefore).to.be.equal(this.alice.address);
+      expect(dragonNestOwnerBefore).to.be.equal(this.dev.address);
 
       await this.dragonNestSupporter.approve(
         this.masterChef.address,
@@ -251,23 +257,8 @@ describe("MasterChef", function () {
         getBigNumber(1000000000000000)
       );
       await this.masterChef.deposit(0, getBigNumber(5000));
-
-      await this.dcau.transfer(this.bob.address, getBigNumber(10000));
-
-      await this.dcau
-        .connect(this.bob)
-        .approve(this.masterChef.address, getBigNumber(5000));
-      await this.masterChef.connect(this.bob).deposit(0, getBigNumber(5000));
-
       await this.usdc.approve(this.masterChef.address, getBigNumber(100000000));
       await this.masterChef.deposit(1, getBigNumber(2000));
-
-      await this.usdc.transfer(this.bob.address, getBigNumber(10000));
-
-      await this.usdc
-        .connect(this.bob)
-        .approve(this.masterChef.address, getBigNumber(2000));
-      await this.masterChef.connect(this.bob).deposit(1, getBigNumber(2000));
 
       await this.dragonNestSupporter.mintItem("https://xxxxx");
       await this.dragonNestSupporter.activateSale();
@@ -292,7 +283,7 @@ describe("MasterChef", function () {
       for (let i = 0; i < poolLen; i++) {
         const poolInfo = await this.masterChef.poolInfo(i);
         const lpToken = await this.MockERC20.attach(poolInfo.lpToken);
-        const balanceBefore = await lpToken.balanceOf(this.alice.address);
+        const balanceBefore = await lpToken.balanceOf(this.dev.address);
         poolInfoBefore.push({ balanceBefore });
       }
 
@@ -301,7 +292,7 @@ describe("MasterChef", function () {
       for (let i = 0; i < poolLen; i++) {
         const poolInfo = await this.masterChef.poolInfo(i);
         const lpToken = await this.MockERC20.attach(poolInfo.lpToken);
-        const balanceAfter = await lpToken.balanceOf(this.alice.address);
+        const balanceAfter = await lpToken.balanceOf(this.dev.address);
         const poolDragonNestInfo = await this.masterChef.poolDragonNestInfo(i);
         const dragonNestInfo = await this.masterChef.dragonNestInfo(i, 1);
 
@@ -325,7 +316,7 @@ describe("MasterChef", function () {
       const dragonNestOwnerAfter = await this.dragonNestSupporter.ownerOf(
         this.usedNestNFTId
       );
-      expect(dragonNestOwnerAfter).to.be.equal(this.alice.address);
+      expect(dragonNestOwnerAfter).to.be.equal(this.dev.address);
     });
 
     it("updatePoolDragonNest -1", async function () {
@@ -333,7 +324,7 @@ describe("MasterChef", function () {
       const USDCPoolDragonNestInfoBefore =
         await this.masterChef.poolDragonNestInfo(1);
 
-      const expecedPendingDepFee = getBigNumber(4000)
+      const expecedPendingDepFee = getBigNumber(2000)
         .mul(4)
         .mul(10)
         .div(100)

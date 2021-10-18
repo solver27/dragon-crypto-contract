@@ -271,9 +271,9 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
             // We are considering tokens which takes accounts fees when trasnsferring such like reflect finance
             IERC20 _lpToken = pool.lpToken;
             {
-                uint256 balnceBefore = _lpToken.balanceOf(address(this));
+                uint256 balanceBefore = _lpToken.balanceOf(address(this));
                 _lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
-                _amount = _lpToken.balanceOf(address(this)) - balnceBefore;
+                _amount = _lpToken.balanceOf(address(this)) - balanceBefore;
                 require(_amount > 0, "We only accept amount > 0");
             }
 
