@@ -462,7 +462,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     /**
      * @dev This function is used for depositing DCAU from market
      */
-    function depositMarketFee(uint _pid, uint _amount) external nonReentrant {
+    function depositMarketFee(uint256 _pid, uint256 _amount) external nonReentrant {
         require(address(poolInfo[_pid].lpToken) == DCAU, "Should be DCAU pool");
         require(msg.sender == NFT_MARKET, "Available from only market");
         poolDragonNestInfo[_pid].pendingDepFee += _amount;
