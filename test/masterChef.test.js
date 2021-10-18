@@ -56,6 +56,7 @@ describe("MasterChef", function () {
       this.dev.address,
       0,
       DCAU_PER_BLOCK, // 0.05 DCAU
+      this.devWallet.address,
       this.devWallet.address
     );
 

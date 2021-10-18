@@ -18,6 +18,18 @@ import "./interfaces/IDCAU.sol";
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
 contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
+    event AddPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
+    event SetPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
+    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
+    event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    event SetFeeAddress(address indexed user, address indexed newAddress);
+    event UpdateStartBlock(uint256 newStartBlock);
+    event SetDCAUPerSecond(uint256 amount);
+    event SetEmissionEndTime(uint256 emissionEndTime);
+    event DragonNestStaked(address indexed user, uint256 indexed tokenId);
+    event DragonNestWithdrawn(address indexed user, uint256 indexed tokenId);
+
     using SafeERC20 for IERC20;
 
     // Info of each user.
@@ -60,7 +72,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     uint256 public constant DCAU_MAX_SUPPLY = 155000 * (10**18);
 
     // The Dragon Cyrpto AU TOKEN!
-    address public immutable dcau;
+    address public immutable DCAU;
     uint256 public dcauPerSecond;
     address public immutable DRAGON_NEST_SUPPORTER;
     // Deposit Fee address
@@ -78,35 +90,26 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     uint256 public emissionEndTime = type(uint256).max;
 
     address public immutable DEVADDRESS;
-
-    event AddPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
-    event SetPool(uint256 indexed pid, address lpToken, uint256 allocPoint, uint256 depositFeeBP);
-    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
-    event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event SetFeeAddress(address indexed user, address indexed newAddress);
-    event UpdateStartBlock(uint256 newStartBlock);
-    event SetDCAUPerSecond(uint256 amount);
-    event SetEmissionEndTime(uint256 emissionEndTime);
-    event DragonNestStaked(address indexed user, uint256 indexed tokenId);
-    event DragonNestWithdrawn(address indexed user, uint256 indexed tokenId);
+    address public immutable NFT_MARKET;
 
     constructor(
-        address _dcau,
+        address _DCAU,
         address _DRAGON_NEST_SUPPORTER,
         address _gameAddress,
         address _feeAddress,
         uint256 _startTime,
         uint256 _dcauPerSecond,
-        address _devAddress
+        address _devAddress,
+        address _NFT_MARKET
     ) {
-        dcau = _dcau;
+        DCAU = _DCAU;
         DRAGON_NEST_SUPPORTER = _DRAGON_NEST_SUPPORTER;
         FEEADDRESS = _feeAddress;
         startTime = _startTime;
         dcauPerSecond = _dcauPerSecond;
         DEVADDRESS = _devAddress;
         GAMEADDRESS = _gameAddress;
+        NFT_MARKET = _NFT_MARKET;
     }
 
     function poolLength() external view returns (uint256) {
@@ -218,7 +221,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
 
         uint256 multiplier = getMultiplier(pool.lastRewardTime, block.timestamp);
         uint256 dcauReward = (multiplier * dcauPerSecond * pool.allocPoint) / totalAllocPoint;
-        uint256 dcauTotalSupply = IERC20(dcau).totalSupply();
+        uint256 dcauTotalSupply = IERC20(DCAU).totalSupply();
 
         uint256 gameDevDcauReward = dcauReward / 15;
 
@@ -233,15 +236,15 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         }
 
         if (dcauReward > 0) {
-            IDCAU(dcau).mint(address(this), dcauReward);
+            IDCAU(DCAU).mint(address(this), dcauReward);
         }
 
         if (gameDevDcauReward > 0) {
             uint256 devReward = (gameDevDcauReward * 1) / 3;
             uint256 gameReward = gameDevDcauReward - devReward;
 
-            IDCAU(dcau).mint(DEVADDRESS, devReward);
-            IDCAU(dcau).mint(GAMEADDRESS, gameReward);
+            IDCAU(DCAU).mint(DEVADDRESS, devReward);
+            IDCAU(DCAU).mint(GAMEADDRESS, gameReward);
         }
 
         // The first time we reach DCAU's max supply we solidify the end of farming.
@@ -331,12 +334,12 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
 
     // Safe DCAU transfer function, just in case if rounding error causes pool to not have enough DCAUs.
     function safeDcauTransfer(address _to, uint256 _amount) internal {
-        uint256 dcauBal = IERC20(dcau).balanceOf(address(this));
+        uint256 dcauBal = IERC20(DCAU).balanceOf(address(this));
         bool transferSuccess = false;
         if (_amount > dcauBal) {
-            transferSuccess = IERC20(dcau).transfer(_to, dcauBal);
+            transferSuccess = IERC20(DCAU).transfer(_to, dcauBal);
         } else {
-            transferSuccess = IERC20(dcau).transfer(_to, _amount);
+            transferSuccess = IERC20(DCAU).transfer(_to, _amount);
         }
         require(transferSuccess, "safeDcauTransfer: transfer failed");
     }
@@ -361,15 +364,23 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         emit SetEmissionEndTime(_emissionEndTime);
     }
 
-    function massUpdatePoolDragonNests() public {
+    function massUpdatePoolDragonNests() external nonReentrant {
+        _massUpdatePoolDragonNests();
+    }
+
+    function _massUpdatePoolDragonNests() private {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
-            updatePoolDragonNest(pid);
+            _updatePoolDragonNest(pid);
         }
     }
 
     // Update dragon nest.
-    function updatePoolDragonNest(uint256 _pid) public {
+    function updatePoolDragonNest(uint256 _pid) external nonReentrant {
+        _updatePoolDragonNest(_pid);
+    }
+
+    function _updatePoolDragonNest(uint256 _pid) private {
         PoolDragonNestInfo storage poolDragonNest = poolDragonNestInfo[_pid];
         uint256 _pendingDepFee = poolDragonNest.pendingDepFee;
 
@@ -415,7 +426,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     function withdrawDragonNest(uint256 tokenId) external nonReentrant {
         require(nestSupporters[tokenId] == msg.sender, "Dragon: Forbidden");
         nestSupporters[tokenId] = address(0);
-        massUpdatePoolDragonNests();
+        _massUpdatePoolDragonNests();
         // transfer in for loop? It's Okay. We should do with a few number of pools
         uint256 len = poolInfo.length;
         for (uint256 pid = 0; pid < len; pid++) {
@@ -446,5 +457,15 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     function stakedAddressForDragonNest(uint256 _tokenId) external view returns (address) {
         require(_tokenId <= 25, "token does not exist");
         return nestSupporters[_tokenId];
+    }
+
+    /**
+     * @dev This function is used for depositing DCAU from market
+     */
+    function depositMarketFee(uint _pid, uint _amount) external nonReentrant {
+        require(address(poolInfo[_pid].lpToken) == DCAU, "Should be DCAU pool");
+        require(msg.sender == NFT_MARKET, "Available from only market");
+        poolDragonNestInfo[_pid].pendingDepFee += _amount;
+        _updatePoolDragonNest(_pid);
     }
 }
