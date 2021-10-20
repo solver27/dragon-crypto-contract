@@ -14,38 +14,65 @@ async function main() {
     "Preparing ERC20 tokens and Writing result in tinyArgs/development.json..."
   );
 
-  // Deploying DACU on testnet
-  console.log("Deploying DACU...");
-  const DCAUToken = await hre.ethers.getContractFactory("MockDCAU");
-  const dcauToken = await DCAUToken.deploy(signers[0].address);
-  await dcauToken.deployed();
-  console.log("Deployed DCAU");
+  // Deploying DCAU on testnet
+  // console.log("Deploying DCAU...");
+  // const DCAUToken = await hre.ethers.getContractFactory("MockDCAU");
+  // const dcauToken = await DCAUToken.deploy(signers[0].address);
+  // await dcauToken.deployed();
+  // console.log("Deployed DCAU");
 
   // Deploying USDC, Link
-  console.log("Deploying USDC, Link...");
+  // console.log("Deploying USDC, Link...");
   const MockERC20 = await hre.ethers.getContractFactory("MockERC20");
-  const usdcToken = await MockERC20.deploy(
-    "USDC Token",
-    "USDC",
-    getBigNumber(1000000000)
-  );
-  const linkToken = await MockERC20.deploy(
-    "Link Token",
-    "LINK",
-    getBigNumber(1000000000)
-  );
-  await usdcToken.deployed();
-  await linkToken.deployed();
-  console.log("Deployed USDC, Link");
+  // const usdcToken = await MockERC20.deploy(
+  //   "USDC Token",
+  //   "USDC",
+  //   getBigNumber(1000000000)
+  // );
+  // const linkToken = await MockERC20.deploy(
+  //   "Link Token",
+  //   "LINK",
+  //   getBigNumber(1000000000)
+  // );
+  // await usdcToken.deployed();
+  // await linkToken.deployed();
+  // console.log("Deployed USDC, Link");
 
-  const content = {
-    dcau: dcauToken.address,
-    usdc: usdcToken.address,
-  };
+  // const content = {
+  //   dcau: dcauToken.address,
+  //   usdc: usdcToken.address,
+  // };
 
+  // await fs.writeFileSync(
+  //   "./scripts/args/tokens_dev.json",
+  //   JSON.stringify(content),
+  //   { flag: "w+" }
+  // );
+
+  // Deploying additional tokens
+  const tokens = [
+    // { name: 'Wrapped BTC', symbol: 'WBTC'  },
+    // { name: 'Wrapped MATIC', symbol: 'WMATIC' },
+    // { name: 'DAI stable coin', symbol: 'DAI'},
+    // { name: 'Link Token', symbol: 'Link' },
+    { name: 'POLYPUP BALL', symbol: 'POLYPUPBALL' },
+    { name: 'POLYPUP BONE', symbol: 'POLYPUPBONE' },
+    { name: 'POLYDOGE', symbol: 'POLYDOGE' }
+  ]
+
+  const additionalTokens = {};
+  for (const token of tokens) {
+    console.log(`Deploying ${token.name}...`);
+    const tokenContract = await MockERC20.deploy(token.name, token.symbol, getBigNumber(1000000000));
+    await tokenContract.deployed();
+    additionalTokens[`${token.symbol}`] = tokenContract.address;
+    console.log(`Deployed ${token.name} at ${tokenContract.address}`);
+  }
+
+  console.log('Writing result...');
   await fs.writeFileSync(
-    "./scripts/args/tokens_dev.json",
-    JSON.stringify(content),
+    "./scripts/args/additional_tokens_dev.json",
+    JSON.stringify(additionalTokens),
     { flag: "w+" }
   );
 

@@ -90,7 +90,6 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     uint256 public emissionEndTime = type(uint256).max;
 
     address public immutable DEVADDRESS;
-    address public immutable NFT_MARKET;
 
     constructor(
         address _DCAU,
@@ -99,8 +98,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         address _feeAddress,
         uint256 _startTime,
         uint256 _dcauPerSecond,
-        address _devAddress,
-        address _NFT_MARKET
+        address _devAddress
     ) {
         DCAU = _DCAU;
         DRAGON_NEST_SUPPORTER = _DRAGON_NEST_SUPPORTER;
@@ -109,7 +107,6 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         dcauPerSecond = _dcauPerSecond;
         DEVADDRESS = _devAddress;
         GAMEADDRESS = _gameAddress;
-        NFT_MARKET = _NFT_MARKET;
     }
 
     function poolLength() external view returns (uint256) {
@@ -464,7 +461,6 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
      */
     function depositMarketFee(uint256 _pid, uint256 _amount) external nonReentrant {
         require(address(poolInfo[_pid].lpToken) == DCAU, "Should be DCAU pool");
-        require(msg.sender == NFT_MARKET, "Available from only market");
         IERC20(DCAU).safeTransferFrom(address(msg.sender), address(this), _amount);
         poolDragonNestInfo[_pid].pendingDepFee += _amount;
         _updatePoolDragonNest(_pid);

@@ -15,8 +15,8 @@ require("dotenv").config();
 // const ROUTER_ADDRESS = "0x2D99ABD9008Dc933ff5c0CD271B88309593aB921"; // avalanche fuji
 // const FACTORY_ADDRESS = "0xE4A575550C2b460d2307b82dCd7aFe84AD1484dd"; // avalanche fuji
 
-const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // avalanche fuji
-const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // avalanche fuji
+const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // rinkeby
+const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // rinkeby
 
 /**
  * This script is only for testnet, don't use it on mainnet
@@ -35,40 +35,61 @@ async function main() {
   // Deploying DCAU on testnet...
 
   // creating dcau_usdc pair...
-  console.log("creating dcau_usdc pair...");
-  const dcau_usdc = await createPair(
-    ROUTER_ADDRESS,
-    FACTORY_ADDRESS,
-    DeployedTokens.dcau,
-    DeployedTokens.usdc,
-    getBigNumber(10000),
-    getBigNumber(50000),
-    alice.address,
-    alice
-  );
+  // console.log("creating dcau_usdc pair...");
+  // const dcau_usdc = await createPair(
+  //   ROUTER_ADDRESS,
+  //   FACTORY_ADDRESS,
+  //   DeployedTokens.dcau,
+  //   DeployedTokens.usdc,
+  //   getBigNumber(10000),
+  //   getBigNumber(50000),
+  //   alice.address,
+  //   alice
+  // );
 
-  // creating dcau_weth pair
-  console.log("creating dcau_weth pair...");
-  const dcau_weth = await createPairETH(
-    ROUTER_ADDRESS,
-    FACTORY_ADDRESS,
-    DeployedTokens.dcau,
-    getBigNumber(10000),
-    getBigNumber(5),
-    alice.address,
-    alice
-  );
+  // // creating dcau_weth pair
+  // console.log("creating dcau_weth pair...");
+  // const dcau_weth = await createPairETH(
+  //   ROUTER_ADDRESS,
+  //   FACTORY_ADDRESS,
+  //   DeployedTokens.dcau,
+  //   getBigNumber(10000),
+  //   getBigNumber(5),
+  //   alice.address,
+  //   alice
+  // );
 
-  const content = {
-    dcau_usdc: dcau_usdc,
-    dcau_weth: dcau_weth,
-  };
+  // const content = {
+  //   dcau_usdc: dcau_usdc,
+  //   dcau_weth: dcau_weth,
+  // };
 
-  await fs.writeFileSync(
-    "./scripts/args/pairs_dev.json",
-    JSON.stringify(content),
-    { flag: "w+" }
-  );
+  // await fs.writeFileSync(
+  //   "./scripts/args/pairs_dev.json",
+  //   JSON.stringify(content),
+  //   { flag: "w+" }
+  // );
+
+  const tokens = [
+    { symbol: 'DAI', address: '0xa37EB8Fe910A00f973E0913024F631Ed387eE512' },
+    { symbol: 'POLYPUPBALL', address: '0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4' }
+  ]
+
+  for (const token of tokens) {
+    console.log(`creating USDC_${token.symbol} pair...`);
+    const pair = await createPair(
+      ROUTER_ADDRESS,
+      FACTORY_ADDRESS,
+      DeployedTokens.usdc,
+      token.address,
+      getBigNumber(10000),
+      getBigNumber(50000),
+      alice.address,
+      alice
+    );
+
+    console.log(`created USDC_${token.symbol} pair at ${pair}`);
+  }
 
   console.log("==END==");
 }

@@ -11,8 +11,8 @@ POLYDOGE (4% deposit) (5X multiplier)
 
 Farms (QUICKSWAP LP Pools)
 
-DGNG/WMATIC (0% deposit) (100X multiplier) (also an auto compounding vault)
-DGNG/USDC (0% deposit) (100X multiplier) (also an auto compounding vault)
+DCAU/WMATIC (0% deposit) (100X multiplier) (also an auto compounding vault)
+DCAU/USDC (0% deposit) (100X multiplier) (also an auto compounding vault)
 DAI/USDC (4% deposit) (10X multiplier)
 POLYPUP BALL/USDC (3% deposit) (15X multiplier)
 
@@ -41,3 +41,25 @@ VaultChef
 
    StrategyMasterChefLP dcau_weth deployed at 0x76082694bD7d0863cbFe30c7060e99799D2bd3d9 with 3212545 gas
    StrategyMasterChefLP dcau_usdc deployed at 0x018C7C09e19b569998C75eb80e7EB8C9009D9208 with 3213225 gas
+
+
+=========== Redeployment =========
+- DragonNestSupporter at 0x790220EF4F1f107E374898ca211cBC2a724f8B1E
+- MasterChef deployed at 0x4068D7Ab3867A52c0eB48282E17e15eA677A7167 with 2753798 gas
+- VaultChef deployed at 0x965F6db159E4A94c82f36f5F80eD17e600104BD3 with 1548587 gas
+
+Mock tokens and lps
+- DCAU 0xaba6D7b5515f70402bFb2633B5446670B996c10b
+- USDC 0xF143436dE21a03c50267dBf64F2B7D6d14dEeA0F
+- Deployed Wrapped BTC at 0x0D97e9f82dB5A1A056434789354cbf595F68AB19
+- Deployed Wrapped MATIC at 0x62F6157D87a0e346Bf5ACbf568414Cf5CCC26237
+- Deployed DAI stable coin at 0xa37EB8Fe910A00f973E0913024F631Ed387eE512
+- Deployed Link Token at 0xA41F61747BcdA7E3c945054c3da111d364E031Aa
+- Deployed POLYPUP BALL at 0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4
+- Deployed POLYPUP BONE at 0x4246287b5BDDfB22798B1c8D24Edf80d495530C1
+- Deployed POLYDOGE at 0xeb689e083F9482B94dD9506c254bA3Bb1Ee8962b
+
+- dcau_weth (on Polygon it should be dcau_wmatic) 0xa07658062c12a0fcf378f5c47aa7fd6a54d76588 [dcau, weth]
+- dcau_usdc 0x35fd7926b4b8fde82c6218281db182b5fd452603 [dcau, usdc]
+- USDC_DAI pair at 0x9cc47c8904519B343CeF1886c56CD412df63f4Db
+- USDC_POLYPUPBALL pair at 0xAc6d0A1F3D8fA47112ad414E8A43141BF5A81A92

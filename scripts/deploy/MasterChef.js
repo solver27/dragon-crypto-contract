@@ -7,7 +7,7 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const dragonUtility = await deployments.get('DragonUtility');
+  const dragonNestSupporter = await deployments.get('DragonNestSupporter');
   const dcau = process.env.PRODUCTION_MODE === 'development' ? deployedTokens.dcau : '0xmainnet dcau address here';
   const feeAddress = process.env.PRODUCTION_MODE === 'development' ? '0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b' : '0xmainnet address here';
   const startTime = process.env.PRODUCTION_MODE === 'development' ? ~~(new Date().getTime / 1000) : 'mainnet time here';
@@ -16,10 +16,10 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   await deploy('MasterChef', {
     from: deployer,
     log: true,
-    args: [dcau, dragonUtility.address, feeAddress, startTime, dcauPerBlock, devWallet],
+    args: [dcau, dragonNestSupporter.address, devWallet, feeAddress, startTime, dcauPerBlock, devWallet],
     deterministicDeployment: false,
   })
 }
 
 module.exports.tags = ['MasterChef', 'PolyDragon'];
-module.exports.dependencies = ['DragonUtility'];
+module.exports.dependencies = ['DragonNestSupporter'];
