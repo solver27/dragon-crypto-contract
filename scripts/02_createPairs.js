@@ -71,9 +71,12 @@ async function main() {
   // );
 
   const tokens = [
-    { symbol: 'DAI', address: '0xa37EB8Fe910A00f973E0913024F631Ed387eE512' },
-    { symbol: 'POLYPUPBALL', address: '0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4' }
-  ]
+    { symbol: "DAI", address: "0xa37EB8Fe910A00f973E0913024F631Ed387eE512" },
+    {
+      symbol: "POLYPUPBALL",
+      address: "0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4",
+    },
+  ];
 
   for (const token of tokens) {
     console.log(`creating USDC_${token.symbol} pair...`);

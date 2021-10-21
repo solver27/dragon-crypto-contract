@@ -34,7 +34,7 @@ describe("DCAUNFTMarket", function () {
     this.MockDCAU = await ethers.getContractFactory("MockDCAU");
     this.MockERC20 = await ethers.getContractFactory("MockERC20");
     this.MockERC721 = await ethers.getContractFactory("MockERC721");
-  
+
     this.signers = await ethers.getSigners();
     this.commissionTaker = this.signers[0];
     this.dev = this.signers[0];
@@ -111,7 +111,7 @@ describe("DCAUNFTMarket", function () {
   });
 
   describe("Set NFT on sale", function () {
-    beforeEach(async function() {
+    beforeEach(async function () {
       await expect(
         this.dcauNFTMarketPlace.addWhitelistedCollection(
           this.nftCharacters.address,
@@ -120,7 +120,7 @@ describe("DCAUNFTMarket", function () {
       )
         .to.emit(this.dcauNFTMarketPlace, "NewCollectionAdded")
         .withArgs(this.nftCharacters.address, 1);
-    })
+    });
     it("Should not sale NFT not in white list", async function () {
       await expect(
         this.dcauNFTMarketPlace.saleNFT(
@@ -149,7 +149,7 @@ describe("DCAUNFTMarket", function () {
           0
         );
     });
-    it("Remove NFT from sale", async function() {
+    it("Remove NFT from sale", async function () {
       await this.nftCharacters.approve(this.dcauNFTMarketPlace.address, 1);
       await this.nftCharacters.approve(this.dcauNFTMarketPlace.address, 2);
       await this.dcauNFTMarketPlace.saleNFT(
@@ -161,33 +161,28 @@ describe("DCAUNFTMarket", function () {
         this.nftCharacters.address,
         2,
         getBigNumber(10)
-      )
+      );
 
-      await expect(
-        this.dcauNFTMarketPlace.removeNFT(
-          0
-        )
-      )
+      await expect(this.dcauNFTMarketPlace.removeNFT(0))
         .to.emit(this.dcauNFTMarketPlace, "TokenRemovedFromSale")
-        .withArgs(
-          0
-        );
-      await expect(
-        this.dcauNFTMarketPlace.getSale(
-          0
-        )
-      ).to.be.revertedWith("This sale is no longer active");
+        .withArgs(0);
+      await expect(this.dcauNFTMarketPlace.getSale(0)).to.be.revertedWith(
+        "This sale is no longer active"
+      );
       const item1 = await this.dcauNFTMarketPlace.getSale(1);
       expect(item1.seller).to.be.equal(this.signers[0].address);
     });
 
-    describe('Buying', function() {
-      beforeEach(async function() {
+    describe("Buying", function () {
+      beforeEach(async function () {
         this.saleNFTId = 1;
         this.price1 = getBigNumber(10);
         this.saleId = 0;
-   
-        await this.nftCharacters.approve(this.dcauNFTMarketPlace.address, this.saleNFTId);
+
+        await this.nftCharacters.approve(
+          this.dcauNFTMarketPlace.address,
+          this.saleNFTId
+        );
         await this.dcauNFTMarketPlace.saleNFT(
           this.nftCharacters.address,
           this.saleNFTId,
@@ -196,11 +191,17 @@ describe("DCAUNFTMarket", function () {
       });
 
       it("Buy NFT from market", async function () {
-        await this.dcau.connect(this.signers[1]).approve(this.dcauNFTMarketPlace.address, getBigNumber(10000000000));
-        await this.dcauNFTMarketPlace.connect(this.signers[1]).buyNFT(this.saleId);
+        await this.dcau
+          .connect(this.signers[1])
+          .approve(this.dcauNFTMarketPlace.address, getBigNumber(10000000000));
+        await this.dcauNFTMarketPlace
+          .connect(this.signers[1])
+          .buyNFT(this.saleId);
 
-        expect(await this.nftCharacters.ownerOf(this.saleNFTId)).to.be.equal(this.signers[1].address);
-      })
-    })
+        expect(await this.nftCharacters.ownerOf(this.saleNFTId)).to.be.equal(
+          this.signers[1].address
+        );
+      });
+    });
   });
 });

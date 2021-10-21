@@ -37,9 +37,8 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
         address tokenContract;
     }
     // SaleNFT[] private saleNFTList;
-    mapping(uint => SaleNFT) saleNFTList; // id => SaleNFT
+    mapping(uint256 => SaleNFT) saleNFTList; // id => SaleNFT
     Counters.Counter private saleIds;
-
 
     /* ========== VARIABLES ========== */
     address public immutable DCAU_TOKEN;
@@ -84,7 +83,7 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
         return collections.at(index);
     }
 
-    function getSaleNFTLength() external view returns(uint) {
+    function getSaleNFTLength() external view returns (uint256) {
         return saleIds.current();
     }
 
@@ -120,7 +119,7 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
         require(isWhitelistedCollection(_tokenContract), "Collection not whitelisted!");
         require(_price > 0, "Price cannot be zero");
 
-        uint _saleId = saleIds.current();
+        uint256 _saleId = saleIds.current();
         IERC721 nftTokenContract = IERC721(_tokenContract);
 
         nftTokenContract.transferFrom(msg.sender, address(this), _tokenId);
