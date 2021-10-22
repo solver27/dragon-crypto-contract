@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-contract WQTUM9 {
+contract WMatic {
     string public name = "Mock Wrapped Matic";
     string public symbol = "MockWMatic";
     uint8 public decimals = 18;

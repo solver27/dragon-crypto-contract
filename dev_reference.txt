@@ -1,4 +1,4 @@
-DCAU (0% deposit) (50X multiplier) (also an auto compounding vault) 100 - 1point
+DCAU (0% deposit) (50X multiplier) (also an auto compounding vault) 10000 - 100%,  100 - 1point
 WETH (4% deposit) (5X multiplier)
 WBTC (4% deposit) (5X multiplier)
 WMATIC (4% deposit) (5X multiplier)

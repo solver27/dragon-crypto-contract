@@ -55,21 +55,25 @@ async function main() {
     // { name: 'Wrapped MATIC', symbol: 'WMATIC' },
     // { name: 'DAI stable coin', symbol: 'DAI'},
     // { name: 'Link Token', symbol: 'Link' },
-    { name: 'POLYPUP BALL', symbol: 'POLYPUPBALL' },
-    { name: 'POLYPUP BONE', symbol: 'POLYPUPBONE' },
-    { name: 'POLYDOGE', symbol: 'POLYDOGE' }
-  ]
+    { name: "POLYPUP BALL", symbol: "POLYPUPBALL" },
+    { name: "POLYPUP BONE", symbol: "POLYPUPBONE" },
+    { name: "POLYDOGE", symbol: "POLYDOGE" },
+  ];
 
   const additionalTokens = {};
   for (const token of tokens) {
     console.log(`Deploying ${token.name}...`);
-    const tokenContract = await MockERC20.deploy(token.name, token.symbol, getBigNumber(1000000000));
+    const tokenContract = await MockERC20.deploy(
+      token.name,
+      token.symbol,
+      getBigNumber(1000000000)
+    );
     await tokenContract.deployed();
     additionalTokens[`${token.symbol}`] = tokenContract.address;
     console.log(`Deployed ${token.name} at ${tokenContract.address}`);
   }
 
-  console.log('Writing result...');
+  console.log("Writing result...");
   await fs.writeFileSync(
     "./scripts/args/additional_tokens_dev.json",
     JSON.stringify(additionalTokens),
