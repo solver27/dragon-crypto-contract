@@ -40,6 +40,9 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
      */
     function addPool(address _strat) external onlyOwner nonReentrant {
         require(!strats[_strat], "Existing strategy");
+        // Below line is just for validate ERC20 contract
+        IERC20(IStrategy(_strat).wantAddress()).allowance(address(this), address(_strat));
+        
         poolInfo.push(PoolInfo({want: IERC20(IStrategy(_strat).wantAddress()), strat: _strat}));
         strats[_strat] = true;
         resetSingleAllowance(poolInfo.length - 1);
@@ -142,7 +145,7 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
     }
 
     // Withdraw everything from pool for yourself
-    function withdrawAll(uint256 _pid) external {
+    function withdrawAll(uint256 _pid) external nonReentrant {
         _withdraw(_pid, type(uint256).max, msg.sender);
     }
 
