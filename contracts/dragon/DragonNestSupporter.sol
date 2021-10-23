@@ -11,58 +11,65 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     event Sold(address indexed buyer, uint256 indexed tokenId);
+    event SaleActivated( address indexed user );
+    event AddWhitelist( address indexed user, address indexed whitelisted, uint256 whitelistAmount );
+    event ItemCostSet( address indexed user, uint256 cost );
 
-    Counters.Counter private _tokenIds;
+    Counters.Counter public TOKEN_IDS;
 
-    Counters.Counter private _currentSaleId;
+    Counters.Counter public CURRENT_SALE_ID;
 
     address public immutable STABLETOKEN;
-    address payable private immutable _devWallet;
-    uint256 private _itemCost;
+    address public immutable DEVWALLET;
 
-    mapping(address => bool) _whitelist;
+    uint256 public ITEMCOST;
 
-    mapping(address => uint256) _whitelistAllowance;
+    mapping(address => bool) public WHITELIST;
+
+    mapping(address => uint256) public WHITELISTED_ADDRESSES_AMOUNT;
 
     bool private _isSaleActive;
 
-    uint256 public PUBLICSALETIMESTAMP;
+    uint256 public immutable PUBLICSALETIMESTAMP;
 
     constructor(
-        address payable devWallet_,
+        address devWallet,
         address _stableToken,
         uint256 _publicSaleOpenTimestamp
     ) ERC721("Dragon Nest Supporters", "DCNS") {
-        _devWallet = devWallet_;
+        require( devWallet != address(0), "must be valid address" );
+        require( _stableToken != address(0), "must be valid address" );
+        require( _publicSaleOpenTimestamp > block.timestamp, "must open in the future" );
+
+        DEVWALLET = devWallet;
         STABLETOKEN = _stableToken;
         PUBLICSALETIMESTAMP = _publicSaleOpenTimestamp;
     }
 
-    function devWallet() public view returns (address) {
-        return _devWallet;
-    }
-
-    function itemCost() public view returns (uint256) {
-        return _itemCost;
-    }
-
     function addWhiteList(address whitelistAddress) external onlyOwner {
-        require(_whitelistAllowance[whitelistAddress] < 2, "already has 2 in allowance");
+        require(WHITELISTED_ADDRESSES_AMOUNT[whitelistAddress] + balanceOf(whitelistAddress) < 2, "already has 2 in allowance");
 
-        _whitelist[whitelistAddress] = true;
-        _whitelistAllowance[whitelistAddress]++;
+        WHITELIST[whitelistAddress] = true;
+        WHITELISTED_ADDRESSES_AMOUNT[whitelistAddress]++;
+
+        emit AddWhitelist(msg.sender, whitelistAddress, WHITELISTED_ADDRESSES_AMOUNT[whitelistAddress]);
     }
 
     function activateSale() external onlyOwner {
+        require( !_isSaleActive, "sale is already active" );
+        require( ITEMCOST > 0, "items must have a price to go on sale" );
+
         _isSaleActive = true;
+
+        emit SaleActivated(msg.sender);
     }
 
     function mintItem(string memory tokenURI) external onlyOwner returns (uint256) {
-        require(_tokenIds.current() < 25, "All tokens have been minted");
+        require(TOKEN_IDS.current() < 25, "All tokens have been minted");
 
-        _tokenIds.increment();
+        TOKEN_IDS.increment();
 
-        uint256 newItemId = _tokenIds.current();
+        uint256 newItemId = TOKEN_IDS.current();
         _mint(address(this), newItemId);
         _setTokenURI(newItemId, tokenURI);
         return newItemId;
@@ -71,27 +78,29 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     function buyDragonNest() external nonReentrant {
         require(balanceOf(_msgSender()) < 2, "Dragon:Forbidden");
         require(_isSaleActive, "sale must be active");
-        require(_currentSaleId.current() < 25, "all tokens sold");
+        require(CURRENT_SALE_ID.current() < 25, "all tokens sold");
 
         if (block.timestamp < PUBLICSALETIMESTAMP) {
-            require(_whitelist[msg.sender], "Not in whitelist");
-            require(_whitelistAllowance[msg.sender] > 0, "must have purchases left");
+            require(WHITELIST[msg.sender], "Not in whitelist");
+            require(WHITELISTED_ADDRESSES_AMOUNT[msg.sender] > 0, "must have purchases left");
         }
 
-        _currentSaleId.increment();
+        CURRENT_SALE_ID.increment();
 
-        TransferHelper.safeTransferFrom(STABLETOKEN, _msgSender(), _devWallet, _itemCost);
+        TransferHelper.safeTransferFrom(STABLETOKEN, _msgSender(), DEVWALLET, ITEMCOST);
 
-        _safeTransfer(address(this), msg.sender, _currentSaleId.current(), "");
+        _safeTransfer(address(this), msg.sender, CURRENT_SALE_ID.current(), "");
 
         if (block.timestamp < PUBLICSALETIMESTAMP) {
-            _whitelistAllowance[msg.sender]--;
+            WHITELISTED_ADDRESSES_AMOUNT[msg.sender]--;
         }
 
-        emit Sold(msg.sender, _currentSaleId.current());
+        emit Sold(msg.sender, CURRENT_SALE_ID.current());
     }
 
     function setItemCost(uint256 _cost) external onlyOwner {
-        _itemCost = _cost;
+        ITEMCOST = _cost;
+
+        emit ItemCostSet( msg.sender, _cost );
     }
 }
