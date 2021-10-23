@@ -7,6 +7,9 @@ import "./BaseStrategyLP.sol";
 abstract contract BaseStrategyLPSingle is BaseStrategyLP {
     using SafeERC20 for IERC20;
 
+    address[] public earnedToToken0Path;
+    address[] public earnedToToken1Path;
+
     function _vaultHarvest() internal virtual;
 
     function earn() external override nonReentrant whenNotPaused onlyGov {

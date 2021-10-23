@@ -7,6 +7,9 @@ import "./BaseStrategy.sol";
 abstract contract BaseStrategyLP is BaseStrategy {
     using SafeERC20 for IERC20;
 
+    address public token0Address;
+    address public token1Address;
+
     function convertDustToEarned() external nonReentrant whenNotPaused {
         // Converts dust tokens into earned tokens, which will be reinvested on the next earn().
 
