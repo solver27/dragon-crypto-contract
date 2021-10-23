@@ -26,10 +26,12 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
     mapping(uint256 => mapping(address => UserInfo)) public userInfo; // Info of each user that stakes LP tokens. pool => user => shares
     mapping(address => bool) private strats;
 
-    event AddPool(address indexed strat);
+    event AddPool(address indexed strat, uint256 indexed pid);
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    event ResetAllowance(address indexed user);
+    event ResetSingleAllowance(address indexed user, uint256 indexed pid);
+
 
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
@@ -46,7 +48,7 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
         poolInfo.push(PoolInfo({want: IERC20(IStrategy(_strat).wantAddress()), strat: _strat}));
         strats[_strat] = true;
         resetSingleAllowance(poolInfo.length - 1);
-        emit AddPool(_strat);
+        emit AddPool(_strat, poolInfo.length - 1);
     }
 
     // View function to see staked Want tokens on frontend.
@@ -55,7 +57,7 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
         UserInfo storage user = userInfo[_pid][_user];
 
         uint256 sharesTotal = IStrategy(pool.strat).sharesTotal();
-        uint256 wantLockedTotal = IStrategy(poolInfo[_pid].strat).wantLockedTotal();
+        uint256 wantLockedTotal = IStrategy(pool.strat).wantLockedTotal();
         if (sharesTotal == 0) {
             return 0;
         }
@@ -85,9 +87,14 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
         UserInfo storage user = userInfo[_pid][_to];
 
         if (_wantAmt > 0) {
-            pool.want.safeTransferFrom(msg.sender, address(this), _wantAmt);
-
-            uint256 sharesAdded = IStrategy(poolInfo[_pid].strat).deposit(_wantAmt);
+            IERC20 _wantToken = pool.want;
+            
+            uint256 balanceBefore = _wantToken.balanceOf(address(this));
+            _wantToken.safeTransferFrom(msg.sender, address(this), _wantAmt);
+            _wantAmt = _wantToken.balanceOf(address(this)) - balanceBefore;
+            require(_wantAmt > 0, "We only accept amount > 0");
+            
+            uint256 sharesAdded = IStrategy(pool.strat).deposit(_wantAmt);
             user.shares = user.shares + sharesAdded;
         }
         emit Deposit(_to, _pid, _wantAmt);
@@ -115,8 +122,8 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
 
-        uint256 wantLockedTotal = IStrategy(poolInfo[_pid].strat).wantLockedTotal();
-        uint256 sharesTotal = IStrategy(poolInfo[_pid].strat).sharesTotal();
+        uint256 wantLockedTotal = IStrategy(pool.strat).wantLockedTotal();
+        uint256 sharesTotal = IStrategy(pool.strat).sharesTotal();
 
         require(user.shares > 0, "user.shares is 0");
         require(sharesTotal > 0, "sharesTotal is 0");
@@ -127,7 +134,7 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
             _wantAmt = amount;
         }
         if (_wantAmt > 0) {
-            uint256 sharesRemoved = IStrategy(poolInfo[_pid].strat).withdraw(_wantAmt);
+            uint256 sharesRemoved = IStrategy(pool.strat).withdraw(_wantAmt);
 
             if (sharesRemoved > user.shares) {
                 user.shares = 0;
@@ -155,11 +162,15 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
             pool.want.safeApprove(pool.strat, uint256(0));
             pool.want.safeIncreaseAllowance(pool.strat, type(uint256).max);
         }
+
+        emit ResetAllowance(owner());
     }
 
     function resetSingleAllowance(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
         pool.want.safeApprove(pool.strat, uint256(0));
         pool.want.safeIncreaseAllowance(pool.strat, type(uint256).max);
+
+        emit ResetSingleAllowance(owner(), _pid);
     }
 }
