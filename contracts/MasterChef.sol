@@ -81,6 +81,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     // Deposit Fee address
     address public immutable FEEADDRESS;
     address public immutable GAMEADDRESS;
+    address public immutable NFT_MARKET;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -101,7 +102,8 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         address _feeAddress,
         uint256 _startTime,
         uint256 _dcauPerSecond,
-        address _devAddress
+        address _devAddress,
+        address _NFT_MARKET
     ) {
         require( _DCAU != address(0), "must be valid address" );
         require( _DRAGON_NEST_SUPPORTER != address(0), "must be valid address" );
@@ -110,6 +112,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         require( _startTime > block.timestamp, "must start in the future" );
         require( _dcauPerSecond <= MAX_EMISSION_RATE, "emission rate too high" );
         require( _devAddress != address(0), "must be valid address" );
+        require( _NFT_MARKET != address(0), "must be valid address" );
 
         DCAU = _DCAU;
         DRAGON_NEST_SUPPORTER = _DRAGON_NEST_SUPPORTER;
@@ -118,6 +121,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         dcauPerSecond = _dcauPerSecond;
         DEVADDRESS = _devAddress;
         GAMEADDRESS = _gameAddress;
+        NFT_MARKET = _NFT_MARKET;
     }
 
     function poolLength() external view returns (uint256) {
@@ -511,6 +515,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     function depositMarketFee(uint256 _pid, uint256 _amount) external nonReentrant {
         require(_pid < poolInfo.length, "pool does not exist" );
         require(address(poolInfo[_pid].lpToken) == DCAU, "Should be DCAU pool");
+        require(msg.sender == NFT_MARKET, "Available from only market");
 
         IERC20(DCAU).safeTransferFrom(address(msg.sender), address(this), _amount);
         poolDragonNestInfo[_pid].pendingDepFee += _amount;
