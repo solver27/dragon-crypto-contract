@@ -14,8 +14,6 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     address public wantAddress;
-    address public token0Address;
-    address public token1Address;
     address public earnedAddress;
 
     address public uniRouterAddress;
@@ -26,11 +24,11 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     address public govAddress;
 
     uint256 public lastEarnBlock = block.number;
-    uint256 public sharesTotal = 0;
+    uint256 public sharesTotal;
 
     address public constant buyBackAddress = 0x000000000000000000000000000000000000dEaD;
     uint256 public controllerFee = 50;
-    uint256 public rewardRate = 0;
+    uint256 public rewardRate;
     uint256 public buyBackRate = 150;
     uint256 public constant feeMaxTotal = 1000;
     uint256 public constant feeMax = 10000; // 100 = 1%
@@ -44,18 +42,13 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     address[] public earnedToWmaticPath; // for distributeFee, DNGN_WMATIC path
     address[] public earnedToDcauPath; // for buyBack, do we need it?
-    address[] public earnedToToken0Path; //
-    address[] public earnedToToken1Path;
-    address[] public token0ToEarnedPath;
-    address[] public token1ToEarnedPath;
 
     event SetSettings(
         uint256 _controllerFee,
         uint256 _rewardRate,
         uint256 _buyBackRate,
         uint256 _withdrawFeeFactor,
-        uint256 _slippageFactor,
-        address _uniRouterAddress
+        uint256 _slippageFactor
     );
 
     modifier onlyGov() {
@@ -79,6 +72,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     function deposit(uint256 _wantAmt) external onlyOwner nonReentrant whenNotPaused returns (uint256) {
         // Call must happen before transfer
+        // TODO we should check the case when wantTokean is equal to earnedToken
         uint256 wantLockedBefore = wantLockedTotal();
 
         IERC20(wantAddress).safeTransferFrom(address(msg.sender), address(this), _wantAmt);
@@ -175,17 +169,12 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         _pause();
     }
 
-    function unpause() external onlyGov {
-        _unpause();
-        _resetAllowances();
-    }
-
     function panic() external onlyGov {
         _pause();
         _emergencyVaultWithdraw();
     }
 
-    function unpanic() external onlyGov {
+    function unpause() external onlyGov {
         _unpause();
         _farm();
     }
@@ -199,8 +188,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         uint256 _rewardRate,
         uint256 _buyBackRate,
         uint256 _withdrawFeeFactor,
-        uint256 _slippageFactor,
-        address _uniRouterAddress
+        uint256 _slippageFactor
     ) external onlyGov {
         require(_controllerFee + _rewardRate + _buyBackRate <= feeMaxTotal, "Max fee of 10%");
         require(_withdrawFeeFactor >= withdrawFeeFactorLL, "_withdrawFeeFactor too low");
@@ -211,9 +199,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         buyBackRate = _buyBackRate;
         withdrawFeeFactor = _withdrawFeeFactor;
         slippageFactor = _slippageFactor;
-        uniRouterAddress = _uniRouterAddress;
 
-        emit SetSettings(_controllerFee, _rewardRate, _buyBackRate, _withdrawFeeFactor, _slippageFactor, _uniRouterAddress);
+        emit SetSettings(_controllerFee, _rewardRate, _buyBackRate, _withdrawFeeFactor, _slippageFactor);
     }
 
     function _safeSwap(
@@ -221,16 +208,18 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         address[] memory _path,
         address _to
     ) internal {
-        uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
-        uint256 amountOut = amounts[amounts.length - 1];
+        if (_amountIn > 0) {
+            uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
+            uint256 amountOut = amounts[amounts.length - 1];
 
-        IUniRouter02(uniRouterAddress).swapExactTokensForTokens(
-            _amountIn,
-            (amountOut * slippageFactor) / 1000,
-            _path,
-            _to,
-            block.timestamp + 600
-        );
+            IUniRouter02(uniRouterAddress).swapExactTokensForTokens(
+                _amountIn,
+                (amountOut * slippageFactor) / 1000,
+                _path,
+                _to,
+                block.timestamp + 600
+            );
+        }
     }
 
     function _safeSwapWmatic(
@@ -238,15 +227,17 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         address[] memory _path,
         address _to
     ) internal {
-        uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
-        uint256 amountOut = amounts[amounts.length - 1];
+        if (_amountIn) {
+            uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
+            uint256 amountOut = amounts[amounts.length - 1];
 
-        IUniRouter02(uniRouterAddress).swapExactTokensForETH(
-            _amountIn,
-            (amountOut * slippageFactor) / 1000,
-            _path,
-            _to,
-            block.timestamp + 600
-        );
+            IUniRouter02(uniRouterAddress).swapExactTokensForETH(
+                _amountIn,
+                (amountOut * slippageFactor) / 1000,
+                _path,
+                _to,
+                block.timestamp + 600
+            );
+        }
     }
 }
