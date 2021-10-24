@@ -17,7 +17,7 @@ abstract contract BaseStrategyLP is BaseStrategy {
         uint256 token0Amt = IERC20(token0Address).balanceOf(address(this));
         if (token0Amt > 0 && token0Address != earnedAddress) {
             // Swap all dust tokens to earned tokens
-            address[] memory _token0ToEarnedPath;
+            address[] memory _token0ToEarnedPath = new address[](2);
             _token0ToEarnedPath[0] = token0Address;
             _token0ToEarnedPath[1] = earnedAddress;
 
@@ -28,7 +28,7 @@ abstract contract BaseStrategyLP is BaseStrategy {
         uint256 token1Amt = IERC20(token1Address).balanceOf(address(this));
         if (token1Amt > 0 && token1Address != earnedAddress) {
             // Swap all dust tokens to earned tokens
-            address[] memory _token1ToEarnedPath;
+            address[] memory _token1ToEarnedPath = new address[](2);
             _token1ToEarnedPath[0] = token1Address;
             _token1ToEarnedPath[1] = earnedAddress;
 
