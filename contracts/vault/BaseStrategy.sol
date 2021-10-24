@@ -67,7 +67,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     function earn() external virtual;
 
-    function vaultSharesTotal() public view virtual returns (uint256);
+    function totalInUnderlying() public view virtual returns (uint256);
 
     function wantLockedTotal() public view virtual returns (uint256);
 
@@ -81,7 +81,10 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         // TODO we should check the case when wantTokean is equal to earnedToken
         uint256 wantLockedBefore = wantLockedTotal();
 
+        uint256 balanceBefore = IERC20(wantAddress).balanceOf(address(this));
         IERC20(wantAddress).safeTransferFrom(address(msg.sender), address(this), _wantAmt);
+        _wantAmt = IERC20(wantAddress).balanceOf(address(this)) - balanceBefore;
+        require(_wantAmt > 0, "We only accept amount > 0");
 
         // Proper deposit amount for tokens with fees, or vaults with deposit fees
         uint256 sharesAdded = _farm();
@@ -96,11 +99,11 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     function _farm() internal returns (uint256) {
         uint256 wantAmt = IERC20(wantAddress).balanceOf(address(this));
         if (wantAmt == 0) return 0;
-        uint256 sharesBefore = vaultSharesTotal();
+        uint256 underlyingBefore = totalInUnderlying();
         _vaultDeposit(wantAmt);
-        uint256 sharesAfter = vaultSharesTotal();
+        uint256 underlyingAfter = totalInUnderlying();
 
-        return sharesAfter - sharesBefore;
+        return underlyingAfter - underlyingBefore;
     }
 
     function withdraw(uint256 _wantAmt) external onlyOwner nonReentrant returns (uint256) {
@@ -132,9 +135,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         uint256 withdrawFee = (_wantAmt * (withdrawFeeFactorMax - withdrawFeeFactor)) / withdrawFeeFactorMax;
         if (withdrawFee > 0) {
             IERC20(wantAddress).safeTransfer(withdrawFeeAddress, withdrawFee);
+            _wantAmt = _wantAmt - withdrawFee;
         }
-
-        _wantAmt = _wantAmt - withdrawFee;
 
         IERC20(wantAddress).safeTransfer(vaultChefAddress, _wantAmt);
 

@@ -80,13 +80,13 @@ contract StrategyMasterChef is BaseStrategy {
         IMasterchef(masterchefAddress).withdraw(pid, 0);
     }
 
-    function vaultSharesTotal() public view override returns (uint256) {
+    function totalInUnderlying() public view override returns (uint256) {
         (uint256 amount, ) = IMasterchef(masterchefAddress).userInfo(pid, address(this));
         return amount;
     }
 
     function wantLockedTotal() public view override returns (uint256) {
-        return IERC20(wantAddress).balanceOf(address(this)) + vaultSharesTotal();
+        return IERC20(wantAddress).balanceOf(address(this)) + totalInUnderlying();
     }
 
     function _resetAllowances() internal override {
