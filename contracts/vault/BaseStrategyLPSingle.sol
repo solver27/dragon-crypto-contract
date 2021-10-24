@@ -45,7 +45,7 @@ abstract contract BaseStrategyLPSingle is BaseStrategyLP {
                     0,
                     0,
                     address(this),
-                    block.timestamp + 600
+                    block.timestamp
                 );
             }
 
