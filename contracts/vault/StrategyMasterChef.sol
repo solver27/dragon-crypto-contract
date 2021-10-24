@@ -97,6 +97,12 @@ contract StrategyMasterChef is BaseStrategy {
         IERC20(earnedAddress).safeIncreaseAllowance(uniRouterAddress, type(uint256).max);
     }
 
+    function _revokeAllowances() internal override {
+        IERC20(wantAddress).safeApprove(masterchefAddress, uint256(0));
+
+        IERC20(earnedAddress).safeApprove(uniRouterAddress, uint256(0));
+    }
+
     function _emergencyVaultWithdraw() internal override {
         IMasterchef(masterchefAddress).emergencyWithdraw(pid);
     }

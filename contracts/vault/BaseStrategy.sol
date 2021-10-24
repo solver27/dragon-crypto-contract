@@ -51,6 +51,11 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         uint256 _slippageFactor
     );
 
+    event Panic(address indexed _gov);
+    event UnPanic(address indexed _gov);
+    event ResetAllowances(address indexed _gov);
+    event SetGov(address indexed _oldGov, address indexed _newGov);
+
     modifier onlyGov() {
         require(msg.sender == govAddress, "!gov");
         _;
@@ -67,6 +72,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     function wantLockedTotal() public view virtual returns (uint256);
 
     function _resetAllowances() internal virtual;
+    function _revokeAllowances() internal virtual;
 
     function _emergencyVaultWithdraw() internal virtual;
 
@@ -163,6 +169,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     function resetAllowances() external onlyGov {
         _resetAllowances();
+        emit ResetAllowances(msg.sender);
     }
 
     function pause() external onlyGov {
@@ -171,16 +178,21 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     function panic() external onlyGov {
         _pause();
+        _revokeAllowances();
         _emergencyVaultWithdraw();
+        emit Panic(msg.sender);
     }
 
     function unpause() external onlyGov {
         _unpause();
+        _resetAllowances();
         _farm();
+        emit UnPanic(msg.sender);
     }
 
     function setGov(address _govAddress) external onlyGov {
         govAddress = _govAddress;
+        emit SetGov(msg.sender, _govAddress);
     }
 
     function setSettings(
@@ -217,7 +229,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
                 (amountOut * slippageFactor) / 1000,
                 _path,
                 _to,
-                block.timestamp + 600
+                block.timestamp
             );
         }
     }
@@ -227,7 +239,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         address[] memory _path,
         address _to
     ) internal {
-        if (_amountIn) {
+        if (_amountIn > 0) {
             uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
             uint256 amountOut = amounts[amounts.length - 1];
 
@@ -236,7 +248,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
                 (amountOut * slippageFactor) / 1000,
                 _path,
                 _to,
-                block.timestamp + 600
+                block.timestamp
             );
         }
     }
