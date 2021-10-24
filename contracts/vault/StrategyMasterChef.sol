@@ -58,10 +58,10 @@ contract StrategyMasterChef is BaseStrategy {
 
             if (earnedAddress != wantAddress) {
                 // Swap half earned to wantAddress
-                address[] memory path;
+                address[] memory path = new address[](2);
                 path[0] = earnedAddress;
                 path[1] = wantAddress;
-                _safeSwap(earnedAmt / 2, path, address(this));
+                _safeSwap(earnedAmt, path, address(this));
             }
             lastEarnBlock = block.number;
             _farm();
