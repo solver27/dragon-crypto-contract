@@ -11,14 +11,14 @@ const {
   advanceTimeStamp,
 } = require("../scripts/shared");
 
-const MASTER_CHEF_DGNG_PER_BLOCK = getBigNumber(5, 16); // 0.05 dgng per block
+const DCAU_PER_SECOND = getBigNumber(5, 16); // 0.05 dcau per block
 
 describe("Vault", function () {
   before(async function () {
     this.VaultChef = await ethers.getContractFactory("VaultChef");
     this.MasterChef = await ethers.getContractFactory("MasterChef");
-    this.DragonUtility = await ethers.getContractFactory("DragonNestSupporter");
-    this.MockDGNG = await ethers.getContractFactory("MockDCAU");
+    this.DragonNestSupporter = await ethers.getContractFactory("DragonNestSupporter");
+    this.MockDCAU = await ethers.getContractFactory("MockDCAU");
     this.MockERC20 = await ethers.getContractFactory("MockERC20");
     this.StrategyMasterChef = await ethers.getContractFactory(
       "StrategyMasterChef"
@@ -31,91 +31,106 @@ describe("Vault", function () {
     this.dev = this.signers[0];
     this.bob = this.signers[1];
     this.devWallet = this.signers[2];
+    this.game = this.signers[2];
     this.withdrawFeeAddress = this.signers[3];
     this.feeAddress = this.signers[4];
+
+    this.NFTMarketAddress = this.signers[0].address;
   });
 
   beforeEach(async function () {
     this.vaultChef = await this.VaultChef.deploy();
-    this.dgng = await this.MockDGNG.deploy(this.dev.address);
+    this.dcau = await this.MockDCAU.deploy(this.dev.address);
     this.usdc = await this.MockERC20.deploy(
       "Mock USDC",
       "MockUSDC",
       getBigNumber(10000000000)
     );
 
-    this.dragonUtility = await this.DragonUtility.deploy(
-      this.devWallet.address,
-      this.usdc.address
+    this.dragonNestSupporter = await this.DragonNestSupporter.deploy(
+      this.dev.address,
+      this.usdc.address,
+      ~~(new Date().getTime() / 1000 + 1)
     );
     this.masterChef = await this.MasterChef.deploy(
-      this.dgng.address,
-      this.dragonUtility.address,
-      this.bob.address,
-      0,
-      MASTER_CHEF_DGNG_PER_BLOCK, // 0.05 DGNG
-      this.devWallet.address
+      this.dcau.address,
+      this.dragonNestSupporter.address,
+      this.game.address, // game address
+      this.devWallet.address,
+      ~~(new Date().getTime() / 1000 + 1),
+      DCAU_PER_SECOND, // 0.05 DCAU
+      this.devWallet.address,
+      this.NFTMarketAddress
     );
-    await this.dgng.transferOwnership(this.masterChef.address);
+    await this.dcau.transferOwnership(this.masterChef.address);
 
     /** Basic actions */
-    // create DGNG_WMATIC pair
-    this.DGNG_WMATIC = await createPairETH(
+    // create DCAU_WMATIC pair
+    this.DCAU_WMATIC = await createPairETH(
       QUICK_SWAP.ROUTER,
       QUICK_SWAP.FACTORY,
-      this.dgng.address,
+      this.dcau.address,
       getBigNumber(10000),
       getBigNumber(50),
       this.dev.address,
       this.dev
     );
 
-    // const dgngWmatic = await this.MockERC20.attatch(this.DGNG_WMATIC);
-    // const currentBal = await dgngWmatic.balanceOf(this.dev);
+    // create DCAU_USDC pair
+    this.DCAU_USDC = await createPair(
+      QUICK_SWAP.ROUTER,
+      QUICK_SWAP.FACTORY,
+      this.dcau.address,
+      this.usdc.address,
+      getBigNumber(5000),
+      getBigNumber(10000),
+      this.dev.address,
+      this.dev
+    )
+
   });
 
   describe("StrategyMasterChef", function () {
     beforeEach(async function () {
-      /** Add DGNG to MasterChef */
+      /** Add USDC to MasterChef */
       await (
-        await this.masterChef.add(50 * 100, this.dgng.address, 0, false)
+        await this.masterChef.add(50 * 100, this.usdc.address, 0, false)
       ).wait(); // poolID: 0
 
-      this.dgngPoolId = 0;
-      this.strategyMasterChefDGNG = await this.StrategyMasterChef.deploy(
+      this.usdcPoolId = 0;
+      this.strategyMasterChefUSDC = await this.StrategyMasterChef.deploy(
         [
-          this.dgng.address,
+          this.dcau.address,
           this.withdrawFeeAddress.address,
           this.feeAddress.address,
         ],
         this.vaultChef.address,
         this.masterChef.address,
         QUICK_SWAP.ROUTER,
-        this.dgngPoolId,
-        this.dgng.address,
-        this.dgng.address,
+        this.usdcPoolId,
+        this.usdc.address,
+        this.dcau.address,
         [
-          this.dgng.address,
+          this.dcau.address,
           WETH, // this is WMATIC
         ]
       );
     });
 
     it("Vault Add pool", async function () {
-      await this.vaultChef.addPool(this.strategyMasterChefDGNG.address);
+      await this.vaultChef.addPool(this.strategyMasterChefUSDC.address);
       expect(await this.vaultChef.poolLength()).to.be.equal(1);
     });
 
     it("Vault Deposit", async function () {
-      await this.vaultChef.addPool(this.strategyMasterChefDGNG.address);
-      const poolInfo = await this.vaultChef.poolInfo(this.dgngPoolId);
-      await this.dgng.approve(this.vaultChef.address, getBigNumber(1000000000));
+      await this.vaultChef.addPool(this.strategyMasterChefUSDC.address);
+      await this.usdc.approve(this.vaultChef.address, getBigNumber(1000000000));
 
       const testAmount = 200;
       await this.vaultChef.deposit(0, getBigNumber(testAmount));
 
       const userInfo = await this.vaultChef.userInfo(
-        this.dgngPoolId,
+        this.usdcPoolId,
         this.dev.address
       );
 
@@ -123,36 +138,36 @@ describe("Vault", function () {
     });
 
     it("Vault withdraw", async function () {
-      await this.vaultChef.addPool(this.strategyMasterChefDGNG.address);
-      await this.dgng.approve(this.vaultChef.address, getBigNumber(1000000000));
+      await this.vaultChef.addPool(this.strategyMasterChefUSDC.address);
+      await this.usdc.approve(this.vaultChef.address, getBigNumber(1000000000));
 
       const testDepositAmount = 200;
       const testWithdrawAmount = 50;
       await this.vaultChef.deposit(
-        this.dgngPoolId,
+        this.usdcPoolId,
         getBigNumber(testDepositAmount)
       );
 
-      const userBalanceBefore = await this.dgng.balanceOf(this.dev.address);
+      const userBalanceBefore = await this.usdc.balanceOf(this.dev.address);
       const userInfoBefore = await this.vaultChef.userInfo(
-        this.dgngPoolId,
+        this.usdcPoolId,
         this.dev.address
       );
 
       await this.vaultChef.withdraw(
-        this.dgngPoolId,
+        this.usdcPoolId,
         getBigNumber(testWithdrawAmount)
       );
 
-      const userBalanceAfter = await this.dgng.balanceOf(this.dev.address);
+      const userBalanceAfter = await this.usdc.balanceOf(this.dev.address);
       const userInfoAfter = await this.vaultChef.userInfo(
-        this.dgngPoolId,
+        this.usdcPoolId,
         this.dev.address
       );
 
       expect(userBalanceAfter).to.be.equal(
         userBalanceBefore.add(getBigNumber(testWithdrawAmount)).sub(
-          getBigNumber(10) //withdraw fee 10% calc
+          getBigNumber(1) //withdraw fee 1% calc
             .mul(getBigNumber(testWithdrawAmount))
             .div(getBigNumber(100))
         )
@@ -163,13 +178,13 @@ describe("Vault", function () {
     });
 
     it("Vault earn", async function () {
-      await this.vaultChef.addPool(this.strategyMasterChefDGNG.address);
-      await this.dgng.approve(this.vaultChef.address, getBigNumber(1000000000));
+      await this.vaultChef.addPool(this.strategyMasterChefUSDC.address);
+      await this.usdc.approve(this.vaultChef.address, getBigNumber(1000000000));
 
       const testDepositAmount = 200;
       const testWithdrawAmount = 50;
       await this.vaultChef.deposit(
-        this.dgngPoolId,
+        this.usdcPoolId,
         getBigNumber(testDepositAmount)
       );
 
@@ -177,19 +192,19 @@ describe("Vault", function () {
       await advanceTimeStamp(10);
 
       await this.vaultChef.withdraw(
-        this.dgngPoolId,
+        this.usdcPoolId,
         getBigNumber(testWithdrawAmount)
       );
 
-      const earnedAmountBefore = await this.dgng.balanceOf(
-        this.strategyMasterChefDGNG.address
+      const earnedAmountBefore = await this.dcau.balanceOf(
+        this.strategyMasterChefUSDC.address
       );
 
       expect(earnedAmountBefore).to.not.equal(0);
-      await this.strategyMasterChefDGNG.earn();
+      await this.strategyMasterChefUSDC.earn();
 
-      const earnedAmountAfter = await this.dgng.balanceOf(
-        this.strategyMasterChefDGNG.address
+      const earnedAmountAfter = await this.dcau.balanceOf(
+        this.strategyMasterChefUSDC.address
       );
       expect(earnedAmountAfter).to.be.equal(0);
     });
@@ -198,39 +213,39 @@ describe("Vault", function () {
   describe("StrategyMasterChefLP", function () {
     beforeEach(async function () {
       await (
-        await this.masterChef.add(100 * 100, this.DGNG_WMATIC, 0, false)
+        await this.masterChef.add(100 * 100, this.DCAU_WMATIC, 0, false)
       ).wait(); // poolID: 0
-      this.dgngMaticPoolId = 0;
-      this.strategyMasterChefLPDGNG_WMATIC =
+      this.dcauMaticPoolId = 0;
+      this.strategyMasterChefLPDCAU_WMATIC =
         await this.StrategyMasterChefLP.deploy(
           [
-            this.dgng.address,
+            this.dcau.address,
             this.withdrawFeeAddress.address,
             this.feeAddress.address,
           ],
           this.vaultChef.address,
           this.masterChef.address,
           QUICK_SWAP.ROUTER,
-          this.dgngMaticPoolId,
-          this.DGNG_WMATIC, // the token which we want to put in pool
-          this.dgng.address,
+          this.dcauMaticPoolId,
+          this.DCAU_WMATIC, // the token which we want to put in pool
+          this.dcau.address,
           [
-            this.dgng.address,
+            this.dcau.address,
             WETH, // this is WMATIC
           ],
-          [this.dgng.address, this.dgng.address],
-          [this.dgng.address, this.dgng.address],
-          [this.dgng.address, WETH]
+          [this.dcau.address, this.dcau.address],
+          [this.dcau.address, this.dcau.address],
+          [this.dcau.address, WETH]
         );
-      this.dgngWmatic = await this.MockERC20.attach(this.DGNG_WMATIC);
+      this.dcauWmatic = await this.MockERC20.attach(this.DCAU_WMATIC);
     });
 
     it("Vault LP Deposit", async function () {
       await this.vaultChef.addPool(
-        this.strategyMasterChefLPDGNG_WMATIC.address
+        this.strategyMasterChefLPDCAU_WMATIC.address
       );
-      const currentBal = await this.dgngWmatic.balanceOf(this.dev.address);
-      await this.dgngWmatic.approve(
+      const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
+      await this.dcauWmatic.approve(
         this.vaultChef.address,
         getBigNumber(1000000000)
       );
@@ -239,9 +254,9 @@ describe("Vault", function () {
       const testAmount = getBigNumber(1)
         .mul(currentBal)
         .div(getBigNumber(1000));
-      await this.vaultChef.deposit(this.dgngMaticPoolId, testAmount);
+      await this.vaultChef.deposit(this.dcauMaticPoolId, testAmount);
       const userInfo = await this.vaultChef.userInfo(
-        this.dgngMaticPoolId,
+        this.dcauMaticPoolId,
         this.dev.address
       );
       expect(userInfo).to.be.equal(testAmount);
@@ -249,42 +264,61 @@ describe("Vault", function () {
 
     it("Vault withdraw", async function () {
       await this.vaultChef.addPool(
-        this.strategyMasterChefLPDGNG_WMATIC.address
+        this.strategyMasterChefLPDCAU_WMATIC.address
       );
-      await this.dgngWmatic.approve(
+      await this.dcauWmatic.approve(
         this.vaultChef.address,
         getBigNumber(1000000000)
       );
-      const currentBal = await this.dgngWmatic.balanceOf(this.dev.address);
+      const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
 
       // // 0.1 % of current balance
       const testAmount = getBigNumber(1)
         .mul(currentBal)
         .div(getBigNumber(1000));
-      await this.vaultChef.deposit(this.dgngMaticPoolId, testAmount);
-      const userBalanceBefore = await this.dgngWmatic.balanceOf(
+      await this.vaultChef.deposit(this.dcauMaticPoolId, testAmount);
+      const userBalanceBefore = await this.dcauWmatic.balanceOf(
         this.dev.address
       );
       const userInfoBefore = await this.vaultChef.userInfo(
-        this.dgngMaticPoolId,
+        this.dcauMaticPoolId,
         this.dev.address
       );
-      await this.vaultChef.withdraw(this.dgngMaticPoolId, testAmount);
-      const userBalanceAfter = await this.dgngWmatic.balanceOf(
+      await this.vaultChef.withdraw(this.dcauMaticPoolId, testAmount);
+      const userBalanceAfter = await this.dcauWmatic.balanceOf(
         this.dev.address
       );
       const userInfoAfter = await this.vaultChef.userInfo(
-        this.dgngMaticPoolId,
+        this.dcauMaticPoolId,
         this.dev.address
       );
       expect(userBalanceAfter).to.be.equal(
         userBalanceBefore.add(testAmount).sub(
-          getBigNumber(10) //withdraw fee 10% calc
+          getBigNumber(1) //withdraw fee 1% calc
             .mul(testAmount)
             .div(getBigNumber(100))
         )
       );
       expect(userInfoAfter).to.be.equal(userInfoBefore.sub(testAmount));
+    });
+
+    it("Vault earn", async function () {
+      await this.vaultChef.addPool(this.strategyMasterChefLPDCAU_WMATIC.address);
+      await this.dcauWmatic.approve(
+        this.vaultChef.address,
+        getBigNumber(1000000000)
+      );
+      
+      const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
+      const testAmount = getBigNumber(1)
+      .mul(currentBal)
+        .div(getBigNumber(1000));
+      await this.vaultChef.deposit(this.dcauMaticPoolId, testAmount);
+
+      await advanceBlock();
+      await advanceTimeStamp(10);
+
+      await this.strategyMasterChefLPDCAU_WMATIC.earn();
     });
   });
 });
