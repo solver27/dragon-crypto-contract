@@ -79,7 +79,6 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
     function deposit(uint256 _wantAmt) external onlyOwner nonReentrant whenNotPaused returns (uint256) {
         // Call must happen before transfer
-        // TODO we should check the case when wantTokean is equal to earnedToken
         uint256 wantLockedBefore = wantLockedTotal();
 
         uint256 balanceBefore = IERC20(wantAddress).balanceOf(address(this));
@@ -110,6 +109,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     function withdraw(uint256 _wantAmt) external onlyOwner nonReentrant returns (uint256) {
         require(_wantAmt > 0, "_wantAmt is 0");
 
+        uint256 wantLockedBefore = wantLockedTotal();
+
         uint256 wantAmt = IERC20(wantAddress).balanceOf(address(this));
 
         // Check if strategy has tokens from panic
@@ -126,7 +127,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
             _wantAmt = wantLockedTotal();
         }
 
-        uint256 sharesRemoved = (_wantAmt * sharesTotal) / wantLockedTotal();
+        uint256 sharesRemoved = (_wantAmt * sharesTotal) / wantLockedBefore;
         if (sharesRemoved > sharesTotal) {
             sharesRemoved = sharesTotal;
         }
