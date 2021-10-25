@@ -119,20 +119,18 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
         uint256 wantLockedBefore = wantLockedTotal();
 
-        uint256 wantAmt = IERC20(wantAddress).balanceOf(address(this));
+        uint256 actualBalanceWantAmt = IERC20(wantAddress).balanceOf(address(this));
 
         // Check if strategy has tokens from panic
-        if (_wantAmt > wantAmt) {
-            _vaultWithdraw(_wantAmt - wantAmt);
-            wantAmt = IERC20(wantAddress).balanceOf(address(this));
+        if (_wantAmt > actualBalanceWantAmt) {
+            _vaultWithdraw(_wantAmt - actualBalanceWantAmt);
+            actualBalanceWantAmt = IERC20(wantAddress).balanceOf(address(this));
         }
 
-        if (_wantAmt > wantAmt) {
-            _wantAmt = wantAmt;
-        }
+        uint256 wantAmtToReceive = _wantAmt;
 
-        if (_wantAmt > wantLockedTotal()) {
-            _wantAmt = wantLockedTotal();
+        if (wantAmtToReceive > actualBalanceWantAmt) {
+            wantAmtToReceive = actualBalanceWantAmt;
         }
 
         uint256 sharesRemoved = (_wantAmt * sharesTotal) / wantLockedBefore;
@@ -142,13 +140,13 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         sharesTotal = sharesTotal - sharesRemoved;
 
         // Withdraw fee
-        uint256 withdrawFee = (_wantAmt * (withdrawFeeFactorMax - withdrawFeeFactor)) / withdrawFeeFactorMax;
+        uint256 withdrawFee = (wantAmtToReceive * (withdrawFeeFactorMax - withdrawFeeFactor)) / withdrawFeeFactorMax;
         if (withdrawFee > 0) {
             IERC20(wantAddress).safeTransfer(withdrawFeeAddress, withdrawFee);
-            _wantAmt = _wantAmt - withdrawFee;
+            wantAmtToReceive = wantAmtToReceive - withdrawFee;
         }
 
-        IERC20(wantAddress).safeTransfer(vaultChefAddress, _wantAmt);
+        IERC20(wantAddress).safeTransfer(vaultChefAddress, wantAmtToReceive);
 
         return sharesRemoved;
     }
