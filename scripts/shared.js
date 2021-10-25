@@ -48,6 +48,12 @@ const QUICK_SWAP = {
   FACTORY: "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
 };
 
+// this is rinkeby
+// const QUICK_SWAP = {
+//   ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+//   FACTORY: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+// };
+
 const WETH = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // on polygon
 // const WETH = "0xc778417e063141139fce010982780140aa0cd5ab "; // on rinkeby
 
@@ -101,7 +107,7 @@ async function createPair(
   ).wait();
   console.log("Approved.");
 
-  console.log("Addding liquidity...");
+  console.log("Adding liquidity...");
   await (
     await routerContract
       .connect(signer)
@@ -148,7 +154,7 @@ async function createPairETH(
   ).wait();
   console.log("Approved.");
 
-  console.log("Addding liquidity...");
+  console.log("Adding liquidity...");
   await (
     await routerContract
       .connect(signer)
@@ -177,12 +183,7 @@ async function advanceBlockTo(blockNumber) {
 }
 
 async function advanceTimeStamp(advancedHrs) {
-  const currentDate = new Date();
-  const afterHours = new Date(
-    currentDate.setDate(currentDate.getHours() + advancedHrs) //After some hours
-  );
-  const afterHoursTimeStampUTC =
-    new Date(afterHours.toUTCString()).getTime() / 1000;
+  const afterHoursTimeStampUTC = ~~(new Date().getTime() / 1000) + 3600 * advancedHrs; 
   network.provider.send("evm_setNextBlockTimestamp", [afterHoursTimeStampUTC]);
   await network.provider.send("evm_mine");
 }
