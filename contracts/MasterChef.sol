@@ -29,7 +29,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     event SetEmissionEndTime(uint256 emissionEndTime);
     event DragonNestStaked(address indexed user, uint256 indexed tokenId);
     event DragonNestWithdrawn(address indexed user, uint256 indexed tokenId);
-    event MarketDCAUDeposited(address indexed user, uint256 indexed pid, uint256 amount );
+    event MarketDCAUDeposited(address indexed user, uint256 indexed pid, uint256 amount);
 
     using SafeERC20 for IERC20;
 
@@ -105,14 +105,14 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         address _devAddress,
         address _NFT_MARKET
     ) {
-        require( _DCAU != address(0), "must be valid address" );
-        require( _DRAGON_NEST_SUPPORTER != address(0), "must be valid address" );
-        require( _gameAddress != address(0), "must be valid address" );
-        require( _feeAddress != address(0), "must be valid address" );
-        require( _startTime > block.timestamp, "must start in the future" );
-        require( _dcauPerSecond <= MAX_EMISSION_RATE, "emission rate too high" );
-        require( _devAddress != address(0), "must be valid address" );
-        require( _NFT_MARKET != address(0), "must be valid address" );
+        require(_DCAU != address(0), "must be valid address");
+        require(_DRAGON_NEST_SUPPORTER != address(0), "must be valid address");
+        require(_gameAddress != address(0), "must be valid address");
+        require(_feeAddress != address(0), "must be valid address");
+        require(_startTime > block.timestamp, "must start in the future");
+        require(_dcauPerSecond <= MAX_EMISSION_RATE, "emission rate too high");
+        require(_devAddress != address(0), "must be valid address");
+        require(_NFT_MARKET != address(0), "must be valid address");
 
         DCAU = _DCAU;
         DRAGON_NEST_SUPPORTER = _DRAGON_NEST_SUPPORTER;
@@ -141,7 +141,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         uint16 _depositFeeBP,
         bool _withUpdate
     ) external onlyOwner nonDuplicated(_lpToken) {
-        require( poolInfo.length < 20, 'too many pools' );
+        require(poolInfo.length < 20, "too many pools");
 
         // Make sure the provided token is ERC20
         _lpToken.balanceOf(address(this));
@@ -391,7 +391,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     }
 
     function setDcauPerSecond(uint256 _dcauPerSecond) external onlyOwner {
-        require( _dcauPerSecond <= MAX_EMISSION_RATE, 'emissions too high limited to 1 per second' );
+        require(_dcauPerSecond <= MAX_EMISSION_RATE, "emissions too high limited to 1 per second");
 
         massUpdatePools();
 
@@ -423,11 +423,11 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
 
     function _updatePoolDragonNest(uint256 _pid) private {
         require(nestSupportersLength > 0, "Must have supporters");
-        
+
         PoolDragonNestInfo storage poolDragonNest = poolDragonNestInfo[_pid];
         uint256 _pendingDepFee = poolDragonNest.pendingDepFee;
 
-        if (_pendingDepFee > 0){
+        if (_pendingDepFee > 0) {
             poolDragonNest.accDepFeePerShare += _pendingDepFee / nestSupportersLength;
             poolDragonNest.pendingDepFee = 0;
         }
@@ -496,9 +496,9 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         uint256 accDepFeePerShare = 0;
 
         if (nestSupportersLength > 0) {
-            accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;    
+            accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee / nestSupportersLength;
         } else {
-            accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee;   
+            accDepFeePerShare = poolDragonNest.accDepFeePerShare + _pendingDepFee;
         }
 
         return accDepFeePerShare - dragonNestInfo[_pid][_tokenId];
@@ -513,13 +513,13 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
      * @dev This function is used for depositing DCAU from market
      */
     function depositMarketFee(uint256 _pid, uint256 _amount) external nonReentrant {
-        require(_pid < poolInfo.length, "pool does not exist" );
+        require(_pid < poolInfo.length, "pool does not exist");
         require(address(poolInfo[_pid].lpToken) == DCAU, "Should be DCAU pool");
         require(msg.sender == NFT_MARKET, "Available from only market");
 
         IERC20(DCAU).safeTransferFrom(address(msg.sender), address(this), _amount);
         poolDragonNestInfo[_pid].pendingDepFee += _amount;
 
-        emit MarketDCAUDeposited( msg.sender, _pid, _amount );
+        emit MarketDCAUDeposited(msg.sender, _pid, _amount);
     }
 }

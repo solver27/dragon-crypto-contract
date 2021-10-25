@@ -11,9 +11,9 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     event Sold(address indexed buyer, uint256 indexed tokenId);
-    event SaleActivated( address indexed user );
-    event AddWhitelist( address indexed user, address indexed whitelisted, uint256 whitelistAmount );
-    event ItemCostSet( address indexed user, uint256 cost );
+    event SaleActivated(address indexed user);
+    event AddWhitelist(address indexed user, address indexed whitelisted, uint256 whitelistAmount);
+    event ItemCostSet(address indexed user, uint256 cost);
 
     Counters.Counter public TOKEN_IDS;
 
@@ -37,9 +37,9 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
         address _stableToken,
         uint256 _publicSaleOpenTimestamp
     ) ERC721("Dragon Nest Supporters", "DCNS") {
-        require( devWallet != address(0), "must be valid address" );
-        require( _stableToken != address(0), "must be valid address" );
-        require( _publicSaleOpenTimestamp > block.timestamp, "must open in the future" );
+        require(devWallet != address(0), "must be valid address");
+        require(_stableToken != address(0), "must be valid address");
+        require(_publicSaleOpenTimestamp > block.timestamp, "must open in the future");
 
         DEVWALLET = devWallet;
         STABLETOKEN = _stableToken;
@@ -56,8 +56,8 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     }
 
     function activateSale() external onlyOwner {
-        require( !_isSaleActive, "sale is already active" );
-        require( ITEMCOST > 0, "items must have a price to go on sale" );
+        require(!_isSaleActive, "sale is already active");
+        require(ITEMCOST > 0, "items must have a price to go on sale");
 
         _isSaleActive = true;
 
@@ -101,6 +101,6 @@ contract DragonNestSupporter is ERC721URIStorage, Ownable, ReentrancyGuard {
     function setItemCost(uint256 _cost) external onlyOwner {
         ITEMCOST = _cost;
 
-        emit ItemCostSet( msg.sender, _cost );
+        emit ItemCostSet(msg.sender, _cost);
     }
 }

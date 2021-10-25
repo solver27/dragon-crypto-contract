@@ -32,7 +32,6 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
     event ResetAllowance(address indexed user);
     event ResetSingleAllowance(address indexed user, uint256 indexed pid);
 
-
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
     }
@@ -44,7 +43,7 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
         require(!strats[_strat], "Existing strategy");
         // Below line is just for validate ERC20 contract
         IERC20(IStrategy(_strat).wantAddress()).allowance(address(this), address(_strat));
-        
+
         poolInfo.push(PoolInfo({want: IERC20(IStrategy(_strat).wantAddress()), strat: _strat}));
         strats[_strat] = true;
         resetSingleAllowance(poolInfo.length - 1);
@@ -88,12 +87,12 @@ contract VaultChef is Ownable, ReentrancyGuard, Operators {
 
         if (_wantAmt > 0) {
             IERC20 _wantToken = pool.want;
-            
+
             uint256 balanceBefore = _wantToken.balanceOf(address(this));
             _wantToken.safeTransferFrom(msg.sender, address(this), _wantAmt);
             _wantAmt = _wantToken.balanceOf(address(this)) - balanceBefore;
             require(_wantAmt > 0, "We only accept amount > 0");
-            
+
             uint256 sharesAdded = IStrategy(pool.strat).deposit(_wantAmt);
             user.shares = user.shares + sharesAdded;
         }

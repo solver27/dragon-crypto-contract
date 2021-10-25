@@ -26,6 +26,15 @@ contract StrategyMasterChef is BaseStrategy {
         address[] memory _earnedToWmaticPath
     ) {
         require(_initialWalletPath.length == 3, "Parameter _initialWalletPath length shoud be 3");
+        require(
+            _initialWalletPath[0] != address(0) && _initialWalletPath[1] != address(0) && _initialWalletPath[2] != address(0),
+            "Any of _initialWalletPath should not be ZERO"
+        );
+        require(
+            _wantAddress != address(0) && _earnedAddress != address(0),
+            "Want token or earned token should not be ZERO address"
+        );
+        require(_wantAddress != _earnedAddress, "Want token should not be equal to earned token");
         govAddress = msg.sender;
         dcauAddress = _initialWalletPath[0];
         withdrawFeeAddress = _initialWalletPath[1];

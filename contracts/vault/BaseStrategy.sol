@@ -33,7 +33,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     uint256 public constant feeMaxTotal = 1000;
     uint256 public constant feeMax = 10000; // 100 = 1%
 
-    uint256 public withdrawFeeFactor = 9000; // 10% withdraw fee, origin: 0% withdraw fee -> withdrawFeeFactor = 10000;
+    uint256 public withdrawFeeFactor = 9900; // 10% withdraw fee, origin: 0% withdraw fee -> withdrawFeeFactor = 10000;
     uint256 public constant withdrawFeeFactorMax = 10000;
     uint256 public constant withdrawFeeFactorLL = 9900;
 
@@ -72,6 +72,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     function wantLockedTotal() public view virtual returns (uint256);
 
     function _resetAllowances() internal virtual;
+
     function _revokeAllowances() internal virtual;
 
     function _emergencyVaultWithdraw() internal virtual;
