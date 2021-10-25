@@ -43,6 +43,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     address[] public earnedToWmaticPath; // for distributeFee, DNGN_WMATIC path
     address[] public earnedToDcauPath; // for buyBack, do we need it?
 
+    bool public HasPanicked = false;
+
     event SetSettings(
         uint256 _controllerFee,
         uint256 _rewardRate,
@@ -187,6 +189,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     }
 
     function panic() external onlyGov {
+        HasPanicked = true;
+
         _pause();
         _revokeAllowances();
         _emergencyVaultWithdraw();
@@ -194,6 +198,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     }
 
     function unpause() external onlyGov {
+        require( !HasPanicked, "cannot unpause a panicked strategy" );
+        
         _unpause();
         _resetAllowances();
         _farm();
