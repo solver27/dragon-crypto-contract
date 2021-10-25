@@ -87,13 +87,13 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
         require(_wantAmt > 0, "We only accept amount > 0");
 
         // Proper deposit amount for tokens with fees, or vaults with deposit fees
-        uint256 sharesAdded = _farm();
+        uint256 underlyingAdded = _farm();
         if (sharesTotal > 0) {
-            sharesAdded = (sharesAdded * sharesTotal) / wantLockedBefore;
+            underlyingAdded = (underlyingAdded * sharesTotal) / wantLockedBefore;
         }
-        sharesTotal = sharesTotal + sharesAdded;
+        sharesTotal = sharesTotal + underlyingAdded;
 
-        return sharesAdded;
+        return underlyingAdded;
     }
 
     function _farm() internal returns (uint256) {
