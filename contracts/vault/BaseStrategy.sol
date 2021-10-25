@@ -240,7 +240,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
             uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
             uint256 amountOut = amounts[amounts.length - 1];
 
-            IUniRouter02(uniRouterAddress).swapExactTokensForTokens(
+            IUniRouter02(uniRouterAddress).swapExactTokensForTokensSupportingFeeOnTransferTokens(
                 _amountIn,
                 (amountOut * slippageFactor) / 1000,
                 _path,
@@ -259,7 +259,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
             uint256[] memory amounts = IUniRouter02(uniRouterAddress).getAmountsOut(_amountIn, _path);
             uint256 amountOut = amounts[amounts.length - 1];
 
-            IUniRouter02(uniRouterAddress).swapExactTokensForETH(
+            IUniRouter02(uniRouterAddress).swapExactTokensForETHSupportingFeeOnTransferTokens(
                 _amountIn,
                 (amountOut * slippageFactor) / 1000,
                 _path,
