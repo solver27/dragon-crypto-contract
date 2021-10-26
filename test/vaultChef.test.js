@@ -46,6 +46,11 @@ describe("Vault", function () {
       "MockUSDC",
       getBigNumber(10000000000)
     );
+    this.link = await this.MockERC20.deploy(
+      "Mock LINK",
+      "MockLINK",
+      getBigNumber(10000000000)
+    );
 
     this.dragonNestSupporter = await this.DragonNestSupporter.deploy(
       this.dev.address,
@@ -82,6 +87,28 @@ describe("Vault", function () {
       QUICK_SWAP.FACTORY,
       this.dcau.address,
       this.usdc.address,
+      getBigNumber(5000),
+      getBigNumber(10000),
+      this.dev.address,
+      this.dev
+    )
+
+    this.DCAU_LINK = await createPair(
+      QUICK_SWAP.ROUTER,
+      QUICK_SWAP.FACTORY,
+      this.dcau.address,
+      this.link.address,
+      getBigNumber(5000),
+      getBigNumber(10000),
+      this.dev.address,
+      this.dev
+    )
+
+    this.USDC_LINK = await createPair(
+      QUICK_SWAP.ROUTER,
+      QUICK_SWAP.FACTORY,
+      this.usdc.address,
+      this.link.address,
       getBigNumber(5000),
       getBigNumber(10000),
       this.dev.address,
@@ -213,10 +240,10 @@ describe("Vault", function () {
   describe("StrategyMasterChefLP", function () {
     beforeEach(async function () {
       await (
-        await this.masterChef.add(100 * 100, this.DCAU_WMATIC, 0, false)
+        await this.masterChef.add(100 * 100, this.USDC_LINK, 0, false)
       ).wait(); // poolID: 0
       this.dcauMaticPoolId = 0;
-      this.strategyMasterChefLPDCAU_WMATIC =
+      this.strategyMasterChefLPUSDC_LINK =
         await this.StrategyMasterChefLP.deploy(
           [
             this.dcau.address,
@@ -227,22 +254,22 @@ describe("Vault", function () {
           this.masterChef.address,
           QUICK_SWAP.ROUTER,
           this.dcauMaticPoolId,
-          this.DCAU_WMATIC, // the token which we want to put in pool
+          this.USDC_LINK, // the token which we want to put in pool
           this.dcau.address,
           [
             this.dcau.address,
             WETH, // this is WMATIC
           ],
           [this.dcau.address, this.dcau.address],
-          [this.dcau.address, this.dcau.address],
-          [this.dcau.address, WETH]
+          [this.dcau.address, this.usdc.address], // earnedToToken0
+          [this.dcau.address, this.link.address]  // earnedToToken1
         );
-      this.dcauWmatic = await this.MockERC20.attach(this.DCAU_WMATIC);
+      this.dcauWmatic = await this.MockERC20.attach(this.USDC_LINK);
     });
 
     it("Vault LP Deposit", async function () {
       await this.vaultChef.addPool(
-        this.strategyMasterChefLPDCAU_WMATIC.address
+        this.strategyMasterChefLPUSDC_LINK.address
       );
       const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
       await this.dcauWmatic.approve(
@@ -264,7 +291,7 @@ describe("Vault", function () {
 
     it("Vault withdraw", async function () {
       await this.vaultChef.addPool(
-        this.strategyMasterChefLPDCAU_WMATIC.address
+        this.strategyMasterChefLPUSDC_LINK.address
       );
       await this.dcauWmatic.approve(
         this.vaultChef.address,
@@ -303,7 +330,7 @@ describe("Vault", function () {
     });
 
     it("Vault earn", async function () {
-      await this.vaultChef.addPool(this.strategyMasterChefLPDCAU_WMATIC.address);
+      await this.vaultChef.addPool(this.strategyMasterChefLPUSDC_LINK.address);
       await this.dcauWmatic.approve(
         this.vaultChef.address,
         getBigNumber(1000000000)
@@ -318,7 +345,7 @@ describe("Vault", function () {
       await advanceBlock();
       await advanceTimeStamp(10);
 
-      await this.strategyMasterChefLPDCAU_WMATIC.earn();
+      await this.strategyMasterChefLPUSDC_LINK.earn();
     });
   });
 });
