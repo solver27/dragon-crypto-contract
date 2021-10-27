@@ -49,7 +49,8 @@ Currently we are going to deploy smart contract on rinkeby and will do smart con
 - DAI pool (4% deposit) (5X multiplier)
   token: 0xa37EB8Fe910A00f973E0913024F631Ed387eE512
   poolId: 1
-  Vault:
+  Vault: true
+  Strat: 0x8d58C0C8821FBF90002AeEb8767657556c52A450
 
 - USDC_DAI (4% deposit) (10X multiplier)
   token: 0x9cc47c8904519B343CeF1886c56CD412df63f4Db
@@ -61,7 +62,8 @@ Currently we are going to deploy smart contract on rinkeby and will do smart con
   token: 0xb500aa687c59919b8031d885129178315f47e320
   lp_token0: DCAU 0x165003a2163465F3E27cEdA9708A150dD1D3b1CB
   lp_token1: LINK 0xA41F61747BcdA7E3c945054c3da111d364E031Aa
-  Vault:
+  Vault: true
+  Strat:
 
 Vault Strategies (Should check and add to vault)
  - "StrategyMasterChef" (DAI): 0x8d58C0C8821FBF90002AeEb8767657556c52A450
