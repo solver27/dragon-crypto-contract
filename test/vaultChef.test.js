@@ -17,7 +17,9 @@ describe("Vault", function () {
   before(async function () {
     this.VaultChef = await ethers.getContractFactory("VaultChef");
     this.MasterChef = await ethers.getContractFactory("MasterChef");
-    this.DragonNestSupporter = await ethers.getContractFactory("DragonNestSupporter");
+    this.DragonNestSupporter = await ethers.getContractFactory(
+      "DragonNestSupporter"
+    );
     this.MockDCAU = await ethers.getContractFactory("MockDCAU");
     this.MockERC20 = await ethers.getContractFactory("MockERC20");
     this.StrategyMasterChef = await ethers.getContractFactory(
@@ -91,7 +93,7 @@ describe("Vault", function () {
       getBigNumber(10000),
       this.dev.address,
       this.dev
-    )
+    );
 
     this.DCAU_LINK = await createPair(
       QUICK_SWAP.ROUTER,
@@ -102,7 +104,7 @@ describe("Vault", function () {
       getBigNumber(10000),
       this.dev.address,
       this.dev
-    )
+    );
 
     this.USDC_LINK = await createPair(
       QUICK_SWAP.ROUTER,
@@ -113,8 +115,7 @@ describe("Vault", function () {
       getBigNumber(10000),
       this.dev.address,
       this.dev
-    )
-
+    );
   });
 
   describe("StrategyMasterChef", function () {
@@ -262,15 +263,13 @@ describe("Vault", function () {
           ],
           [this.dcau.address, this.dcau.address],
           [this.dcau.address, this.usdc.address], // earnedToToken0
-          [this.dcau.address, this.link.address]  // earnedToToken1
+          [this.dcau.address, this.link.address] // earnedToToken1
         );
       this.dcauWmatic = await this.MockERC20.attach(this.USDC_LINK);
     });
 
     it("Vault LP Deposit", async function () {
-      await this.vaultChef.addPool(
-        this.strategyMasterChefLPUSDC_LINK.address
-      );
+      await this.vaultChef.addPool(this.strategyMasterChefLPUSDC_LINK.address);
       const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
       await this.dcauWmatic.approve(
         this.vaultChef.address,
@@ -290,9 +289,7 @@ describe("Vault", function () {
     });
 
     it("Vault withdraw", async function () {
-      await this.vaultChef.addPool(
-        this.strategyMasterChefLPUSDC_LINK.address
-      );
+      await this.vaultChef.addPool(this.strategyMasterChefLPUSDC_LINK.address);
       await this.dcauWmatic.approve(
         this.vaultChef.address,
         getBigNumber(1000000000)
@@ -335,10 +332,10 @@ describe("Vault", function () {
         this.vaultChef.address,
         getBigNumber(1000000000)
       );
-      
+
       const currentBal = await this.dcauWmatic.balanceOf(this.dev.address);
       const testAmount = getBigNumber(1)
-      .mul(currentBal)
+        .mul(currentBal)
         .div(getBigNumber(1000));
       await this.vaultChef.deposit(this.dcauMaticPoolId, testAmount);
 

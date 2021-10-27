@@ -16,7 +16,7 @@
     "rinkeby:deploy": "hardhat --network rinkeby deploy",
     "rinkeby:verify": "hardhat --network rinkeby etherscan-verify --solc-input",
     "rinkeby:export": "hardhat --network rinkeby export --export exports/rinkeby.json",
-    "prettier": "prettier --write test/**/*.js && prettier --write scripts/**/*.js && prettier --write contracts/**/*.sol"
+    "prettier": "prettier --write test/**/*.js && prettier --write scripts/**/*.js && prettier --write deploy/**/*.js && prettier --write contracts/**/*.sol"
   },
   "repository": {
     "type": "git",

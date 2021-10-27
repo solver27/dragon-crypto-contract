@@ -97,7 +97,7 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
 
         if (sharesTotal > 0) {
             sharesAmount = (underlyingAdded * sharesTotal) / wantLockedBefore;
-        } 
+        }
 
         sharesTotal = sharesTotal + sharesAmount;
 
@@ -196,8 +196,8 @@ abstract contract BaseStrategy is Ownable, ReentrancyGuard, Pausable {
     }
 
     function unpause() external onlyGov {
-        require( !HasPanicked, "cannot unpause a panicked strategy" );
-        
+        require(!HasPanicked, "cannot unpause a panicked strategy");
+
         _unpause();
         _resetAllowances();
         _farm();

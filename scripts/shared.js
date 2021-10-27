@@ -183,7 +183,8 @@ async function advanceBlockTo(blockNumber) {
 }
 
 async function advanceTimeStamp(advancedHrs) {
-  const afterHoursTimeStampUTC = ~~(new Date().getTime() / 1000) + 3600 * advancedHrs; 
+  const afterHoursTimeStampUTC =
+    ~~(new Date().getTime() / 1000) + 3600 * advancedHrs;
   network.provider.send("evm_setNextBlockTimestamp", [afterHoursTimeStampUTC]);
   await network.provider.send("evm_mine");
 }

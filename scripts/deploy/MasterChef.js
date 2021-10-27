@@ -13,9 +13,11 @@ module.exports = async function ({
   const { deployer } = await getNamedAccounts();
 
   const dragonNestSupporter = await deployments.get("DragonNestSupporter");
+  const mockDCAU = await deployments.get("MockDCAU");
+
   const dcau =
     process.env.PRODUCTION_MODE === "development"
-      ? deployedTokens.dcau
+      ? mockDCAU.address
       : "0xmainnet dcau address here";
   const feeAddress =
     process.env.PRODUCTION_MODE === "development"
@@ -23,7 +25,7 @@ module.exports = async function ({
       : "0xmainnet address here";
   const startTime =
     process.env.PRODUCTION_MODE === "development"
-      ? ~~(new Date().getTime / 1000)
+      ? ~~(new Date().getTime() / 1000 + 500)
       : "mainnet time here";
   const dcauPerBlock = getBigNumber(5, 16); // 0.05 dcau
   const devWallet =
@@ -41,10 +43,11 @@ module.exports = async function ({
       startTime,
       dcauPerBlock,
       devWallet,
+      "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b", // NFT market address but should be changed
     ],
     deterministicDeployment: false,
   });
 };
 
 module.exports.tags = ["MasterChef", "PolyDragon"];
-module.exports.dependencies = ["DragonNestSupporter"];
+module.exports.dependencies = ["DragonNestSupporter", "MockDCAU"];

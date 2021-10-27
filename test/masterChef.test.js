@@ -227,9 +227,12 @@ describe("MasterChef", function () {
         getBigNumber(1000000000000000)
       );
       await this.dragonNestSupporter.mintItem("https://xxxxx");
-      await this.dragonNestSupporter.setItemCost(getBigNumber(5, 16))
+      await this.dragonNestSupporter.setItemCost(getBigNumber(5, 16));
       await this.dragonNestSupporter.activateSale();
-      await this.usdc.approve(this.dragonNestSupporter.address, getBigNumber(100000000));
+      await this.usdc.approve(
+        this.dragonNestSupporter.address,
+        getBigNumber(100000000)
+      );
       await this.dragonNestSupporter.buyDragonNest();
     });
 
@@ -268,9 +271,12 @@ describe("MasterChef", function () {
       await this.masterChef.deposit(1, getBigNumber(2000));
 
       await this.dragonNestSupporter.mintItem("https://xxxxx");
-      await this.dragonNestSupporter.setItemCost(getBigNumber(5, 16))
+      await this.dragonNestSupporter.setItemCost(getBigNumber(5, 16));
       await this.dragonNestSupporter.activateSale();
-      await this.usdc.approve(this.dragonNestSupporter.address, getBigNumber(100000000));
+      await this.usdc.approve(
+        this.dragonNestSupporter.address,
+        getBigNumber(100000000)
+      );
       await this.dragonNestSupporter.buyDragonNest();
       await this.dragonNestSupporter.approve(
         this.masterChef.address,
