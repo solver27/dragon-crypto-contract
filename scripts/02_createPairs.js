@@ -76,6 +76,8 @@ async function main() {
     { symbol: "MIM", address: DeployedTokens.mim },
   ];
 
+  let pairsContent = {}
+
   for (const token of tokens) {
     console.log(`creating DCAU_${token.symbol} pair...`);
     const pair = await createPair(
@@ -89,8 +91,16 @@ async function main() {
       alice
     );
 
+    pairsContent['dcau_' + token.symbol.toLowerCase()] = pair
+
     console.log(`created DCAU_${token.symbol} pair at ${pair}`);
   }
+
+  await fs.writeFileSync(
+    "./scripts/args/pairs_dev.json",
+    JSON.stringify(pairsContent),
+    { flag: "w+" }
+  );
 
   console.log("==END==");
 }
