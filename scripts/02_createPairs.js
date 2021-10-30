@@ -9,6 +9,7 @@ const {
 } = require("./shared");
 const UniswapV2Router = require("./abis/UniswapV2Router.json");
 const DeployedTokens = require("./args/tokens_dev.json");
+const AdditionalTokens = require("./args/additional_tokens_dev.json");
 
 require("dotenv").config();
 
@@ -71,9 +72,9 @@ async function main() {
   // );
 
   const tokens = [
-    { symbol: "WAVAX", address: DeployedTokens.wavax },
-    { symbol: "USDTe", address: DeployedTokens.usdte },
-    { symbol: "MIM", address: DeployedTokens.mim },
+    { symbol: "WAVAX", address: AdditionalTokens.WAVAX },
+    { symbol: "USDTe", address: AdditionalTokens.USDTe },
+    { symbol: "MIM", address: AdditionalTokens.MIM },
   ];
 
   let pairsContent = {}
