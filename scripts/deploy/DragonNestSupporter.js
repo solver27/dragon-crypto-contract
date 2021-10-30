@@ -29,4 +29,4 @@ module.exports = async function ({
   });
 };
 
-module.exports.tags = ["DragonNestSupporter", "PolyDragon"];
+module.exports.tags = ["DragonNestSupporter", "DragonCrypto"];

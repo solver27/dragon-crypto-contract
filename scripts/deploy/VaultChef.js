@@ -11,4 +11,4 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   });
 };
 
-module.exports.tags = ["VaultChef", "PolyDragon"];
+module.exports.tags = ["VaultChef", "DragonCrypto"];

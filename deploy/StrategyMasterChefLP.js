@@ -58,5 +58,5 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   })
 }
 
-module.exports.tags = ['StrategyMasterChef', 'PolyDragon'];
+module.exports.tags = ['StrategyMasterChef', 'DragonCrypto'];
 module.exports.dependencies = ["MockDCAU", "VaultChef", "MasterChef"];

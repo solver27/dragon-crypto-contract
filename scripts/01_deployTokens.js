@@ -55,9 +55,17 @@ async function main() {
     // { name: 'Wrapped MATIC', symbol: 'WMATIC' },
     // { name: 'DAI stable coin', symbol: 'DAI'},
     // { name: 'Link Token', symbol: 'Link' },
-    { name: "POLYPUP BALL", symbol: "POLYPUPBALL" },
-    { name: "POLYPUP BONE", symbol: "POLYPUPBONE" },
-    { name: "POLYDOGE", symbol: "POLYDOGE" },
+    // { name: "POLYPUP BALL", symbol: "POLYPUPBALL" },
+    // { name: "POLYPUP BONE", symbol: "POLYPUPBONE" },
+    // { name: "POLYDOGE", symbol: "POLYDOGE" },
+    { name: "Wrapped AVAX", symbol: "WAVAX" },
+    { name: "Wrapped Bitcoin", symbol: "WBTC" },
+    { name: "Wrapped Ethereum", symbol: "WETHe" },
+    { name: "Tether", symbol: "USDTe" },
+    { name: "Trader Joe", symbol: "JOE" },
+    { name: "Magic Internet Money", symbol: "MIM" },
+    { name: "Spell Token", symbol: "SPELL" },
+    { name: "Time", symbol: "TIME" }
   ];
 
   const additionalTokens = {};

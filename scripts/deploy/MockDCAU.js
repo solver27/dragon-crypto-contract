@@ -12,4 +12,4 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   });
 };
 
-module.exports.tags = ["MockDCAU", "PolyDragon"];
+module.exports.tags = ["MockDCAU", "DragonCrypto"];

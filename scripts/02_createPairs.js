@@ -71,19 +71,17 @@ async function main() {
   // );
 
   const tokens = [
-    { symbol: "DAI", address: "0xa37EB8Fe910A00f973E0913024F631Ed387eE512" },
-    {
-      symbol: "POLYPUPBALL",
-      address: "0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4",
-    },
+    { symbol: "WAVAX", address: DeployedTokens.wavax },
+    { symbol: "USDTe", address: DeployedTokens.usdte },
+    { symbol: "MIM", address: DeployedTokens.mim },
   ];
 
   for (const token of tokens) {
-    console.log(`creating USDC_${token.symbol} pair...`);
+    console.log(`creating DCAU_${token.symbol} pair...`);
     const pair = await createPair(
       ROUTER_ADDRESS,
       FACTORY_ADDRESS,
-      DeployedTokens.usdc,
+      DeployedTokens.dcau,
       token.address,
       getBigNumber(10000),
       getBigNumber(50000),
@@ -91,7 +89,7 @@ async function main() {
       alice
     );
 
-    console.log(`created USDC_${token.symbol} pair at ${pair}`);
+    console.log(`created DCAU_${token.symbol} pair at ${pair}`);
   }
 
   console.log("==END==");

@@ -53,5 +53,5 @@ module.exports = async function ({
   });
 };
 
-module.exports.tags = ["StrategyMasterChef", "PolyDragon"];
+module.exports.tags = ["StrategyMasterChef", "DragonCrypto"];
 module.exports.dependencies = ["MockDCAU", "VaultChef", "MasterChef"];

@@ -49,5 +49,5 @@ module.exports = async function ({
   });
 };
 
-module.exports.tags = ["MasterChef", "PolyDragon"];
+module.exports.tags = ["MasterChef", "DragonCrypto"];
 module.exports.dependencies = ["DragonNestSupporter", "MockDCAU"];
