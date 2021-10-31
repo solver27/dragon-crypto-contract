@@ -1,6 +1,5 @@
 // Defining bytecode and abi from original contract on mainnet to ensure bytecode matches and it produces the same pair code hash
 require("dotenv").config();
-const deployedTokens = require("../scripts/args/tokens_dev.json");
 const { getBigNumber } = require("../scripts/shared");
 
 module.exports = async function ({

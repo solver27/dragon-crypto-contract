@@ -115,6 +115,15 @@ module.exports = {
       live: true,
       saveDeployments: true,
     },
+    fuji: {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+      accounts,
+      chainId: 43113,
+      live: true,
+      saveDeployments: true,
+      tags: ["staging"],
+      gasMultiplier: 2,
+    },
   },
   etherscan: {
     apiKey: process.env.BSC_API_KEY, // BSC_API_KEY

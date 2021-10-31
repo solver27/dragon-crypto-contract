@@ -11,9 +11,9 @@ module.exports = async function ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const USDC =
+  const stableCoin =
     process.env.PRODUCTION_MODE === "development"
-      ? deployedTokens.usdc
+      ? "0x3D900d5268a33F8f4e06BD6c157abEb789460BA5"  // USDTe on fuji
       : "0xmainnet usdc address here";
   const devWallet =
     process.env.PRODUCTION_MODE === "development"
@@ -24,7 +24,7 @@ module.exports = async function ({
   await deploy("DragonNestSupporter", {
     from: deployer,
     log: true,
-    args: [devWallet, USDC, saleTimeStamp],
+    args: [devWallet, stableCoin, saleTimeStamp],
     deterministicDeployment: false,
   });
 };
