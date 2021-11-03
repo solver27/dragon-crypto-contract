@@ -145,3 +145,9 @@ Mock tokens and lps
   MC pool id: 2
   StrategyMasterChefLP: 0x510f35d760abd4Cb7B5a83c66781E013d28B6178
   VC pool id: 
+
+
+  ======== AVAX LIVE =========
+  DCAU: 0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30
+  NFTMarket: 0x0144719fe9051aF2eb1bF31FE8c975E323974FD3
+  MasterChef: 0x0be0d3d0c3a122b7f57b6119766880a83f95ae9f
