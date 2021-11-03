@@ -30,7 +30,6 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     event DragonNestStaked(address indexed user, uint256 indexed tokenId);
     event DragonNestWithdrawn(address indexed user, uint256 indexed tokenId);
     event MarketDCAUDeposited(address indexed user, uint256 indexed pid, uint256 amount);
-    event MarketSet( address indexed user, address marketAddress );
 
     using SafeERC20 for IERC20;
 
@@ -82,7 +81,7 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
     // Deposit Fee address
     address public immutable FEEADDRESS;
     address public immutable GAMEADDRESS;
-    address public NFT_MARKET;
+    address public immutable NFT_MARKET;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -522,12 +521,5 @@ contract MasterChef is ERC721Holder, Ownable, ReentrancyGuard {
         poolDragonNestInfo[_pid].pendingDepFee += _amount;
 
         emit MarketDCAUDeposited(msg.sender, _pid, _amount);
-    }
-    
-    function setMarket( address marketAddress ) external onlyOwner{
-        require(marketAddress != address(0), "must be valid address");
-        NFT_MARKET = marketAddress;
-        
-        emit MarketSet( msg.sender, marketAddress );
     }
 }

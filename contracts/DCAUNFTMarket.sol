@@ -20,6 +20,7 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
     event NewCategoryAdded(uint256 categoryId, string _categoryName);
     event NewCollectionAdded(address collectionContract, uint256 _category);
     event CollectionRemoved(address collectionContract);
+    event MasterchefSet( address indexed user, address masterchef);
 
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -51,14 +52,13 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
     uint256 public constant COMMISSION_RATE = 200;
     uint256 public constant NEST_SUPPORTERS_RATE = 100;
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-    address public immutable MASTER_CHEF;
+    address public MASTER_CHEF;
     uint256 public immutable dcauPoolId;
 
     /* ========== CONSTRUCTOR ========== */
     constructor(
         address _DCAU_TOKEN,
         address _commissionTaker,
-        address _mcAddress,
         uint256 _pid
     ) {
         DCAU_TOKEN = _DCAU_TOKEN;
@@ -68,8 +68,8 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
         categories[2] = "Equipment";
         categories[3] = "Utility";
         categories[4] = "Resources";
-        categoryLength = 4;
-        MASTER_CHEF = _mcAddress;
+        categories[5] = "Tiny Dragons";
+        categoryLength = 5;
         dcauPoolId = _pid;
     }
 
@@ -225,5 +225,11 @@ contract DCAUNFTMarket is ReentrancyGuard, Ownable, ERC721Holder {
         numCollections = numCollections.sub(1);
 
         emit CollectionRemoved(collectionContract);
+    }
+
+    function setMasterchef( address masterchef ) external onlyOwner{
+        MASTER_CHEF = masterchef;
+
+        emit MasterchefSet(msg.sender, masterchef);
     }
 }
