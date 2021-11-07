@@ -124,6 +124,13 @@ module.exports = {
       tags: ["staging"],
       gasMultiplier: 2,
     },
+    avalanche: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      accounts,
+      chainId: 43114,
+      live: true,
+      saveDeployments: true
+    }
   },
   etherscan: {
     apiKey: process.env.BSC_API_KEY, // BSC_API_KEY
