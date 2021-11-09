@@ -146,27 +146,41 @@ Mock tokens and lps
   StrategyMasterChefLP: 0x510f35d760abd4Cb7B5a83c66781E013d28B6178
   VC pool id: 
 
-
 === Avalanche deploy ===
+'0x60aE616a2155Ee3d9A68541Ba4544862310933d4': // TradeJoe router on Avalanche
+'0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10': // TradeJoe factory
+
 - StratLPs
   - DCAU/WAVAX
     address: (0x81034A38a124A3290DC226798f34c6645B153a02)
     token0_token1: 0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30 / 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7
     MC pid: 0
-
+    VC pid: 0
     "StrategyMasterChefLP" :  0x831b6a5983b503bEb7f55ec3f6A4583C37066Aa9
 
   - DCAU/USDT.e
     address: 0x605AAC9F0024A019F328074909874E3EE510f377
     token0_token1: 0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30 / 0xc7198437980c041c805A1EDcbA50c1Ce5db95118
     MC pid: 1
-
+    VC pid: 1
     "StrategyMasterChefLP": 0xeF25f9a22DFc7f0Bfc8A8EEE185D74b1c1a827DE  
  
   - DCAU/MIM
     address: 0xbD941531c1234ed2f9dbbC79aEe019bA85c16640
     token0_token1: 0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30 / 0x130966628846BFd36ff31a822705796e8cb8C18D
     MC pid: 2
-
+    VC pid: 2
     "StrategyMasterChefLP": 0x2Cc9D1ec4878569a94B172dE0D07f24b48564324
     
+
+======= Avalanche vault test deploy ========
+"VaultChef": 0xc35F12114e20897A2a6B7AE1e1f2Aea389Ec909d
+
+  - DCAU/WAVAX
+    "StrategyMasterChefLP": 0x423527a48F3F94949bb0D1927F362B87C266E85b
+  
+  - DCAU/USDT.e
+    "StrategyMasterChefLP": 0x164fC6d99648dd33db68F7c7c377C3AeB6A23756
+
+  - DCAU/MIM
+    "StrategyMasterChefLP": deployed at 0x4743Ed3DdE29a546cC1Ec149c7213d74DfFA961C with 3429292 gas

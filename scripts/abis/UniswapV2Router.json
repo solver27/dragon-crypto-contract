@@ -95,7 +95,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amountETHMin",
+        "name": "amountAVAXMin",
         "type": "uint256"
       },
       {
@@ -109,7 +109,7 @@
         "type": "uint256"
       }
     ],
-    "name": "addLiquidityETH",
+    "name": "addLiquidityAVAX",
     "outputs": [
       {
         "internalType": "uint256",
@@ -118,7 +118,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amountETH",
+        "name": "amountAVAX",
         "type": "uint256"
       },
       {

@@ -43,9 +43,14 @@ const MockWMATIC = {
 // const ADDRESS_ZERO = ethers.utils.getAddress('0');
 
 // Quick Swap addresses
+// const QUICK_SWAP = {
+//   ROUTER: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
+//   FACTORY: "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
+// };
+
 const QUICK_SWAP = {
-  ROUTER: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
-  FACTORY: "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
+  ROUTER: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4",
+  FACTORY: "0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10",
 };
 
 // this is rinkeby
@@ -54,8 +59,9 @@ const QUICK_SWAP = {
 //   FACTORY: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
 // };
 
-const WETH = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // on polygon
+// const WETH = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // on polygon
 // const WETH = "0xc778417e063141139fce010982780140aa0cd5ab "; // on rinkeby
+const WETH = "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"; // on Avalanche
 
 const UniswapV2Router = require("./abis/UniswapV2Router.json");
 const UniswapV2Factory = require("./abis/UniswapV2Factory.json");
@@ -158,7 +164,7 @@ async function createPairETH(
   await (
     await routerContract
       .connect(signer)
-      .addLiquidityETH(token0, amount0, amount0, amount1, to, deadline, {
+      .addLiquidityAVAX(token0, amount0, amount0, amount1, to, deadline, {
         value: amount1,
       })
   ).wait();

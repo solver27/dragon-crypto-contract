@@ -24,14 +24,10 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   // const vaultChef = await deployments.get("VaultChef");
   // const masterChef = await deployments.get("MasterChef");
 
-  const mockDCAU = { address: 'mock' };
-  const vaultChef = { address: '0xdEAE788795Bbc8126E7532EB94B7e6b9E5960cfF' };
+  const vaultChef = { address: '0xc35F12114e20897A2a6B7AE1e1f2Aea389Ec909d' };
   const masterChef = { address: '0x0be0d3d0c3a122b7f57b6119766880a83f95ae9f' };
 
-  const dcau =
-    process.env.PRODUCTION_MODE === "development"
-      ? mockDCAU.address
-      : "0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30";
+  const dcau = "0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30";
   
   /** @todo */
   const withdrawFeeAddress = "0x306e5F7FAe63a86b3E2D88F94cCa8D7614684D91";
