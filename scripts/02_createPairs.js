@@ -46,7 +46,7 @@ async function main() {
     const pair = await createPair(
       ROUTER_ADDRESS,
       FACTORY_ADDRESS,
-      "0x2c3eAe25FF60A83261beCdAed05AF955678aA319", // on fuji
+      "0xF72Cc18218058722a3874b63487F1B4C82F92081", // on fuji DCAU
       token.address,
       getBigNumber(10000),
       getBigNumber(50000),
