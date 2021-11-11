@@ -15,7 +15,7 @@
 
 require('dotenv').config();
 
-// This is for DCAU_LINK LP on rinkeby, pool id is 3
+// This is for DCAU_WAVAx LP on fuji, pool id is 3
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -31,11 +31,17 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   const withdrawFeeAddress = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b";
   const feeAddress = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b";
 
-  const uniRouterAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
-  const pid = 3;
-  const wantAddress = '0xb500aa687c59919b8031d885129178315f47e320'; // DCAU_LINK on rinkeby
-  const linkAddress = '0xA41F61747BcdA7E3c945054c3da111d364E031Aa'; // Link on rinkeby
-  const WETH = '0xc778417e063141139fce010982780140aa0cd5ab';
+  /** @todo should be changed*/
+  const uniRouterAddress = '0x2D99ABD9008Dc933ff5c0CD271B88309593aB921'; // Pangolin router on Fuji
+  const pid = 0;
+  const wantAddress = '0xAeEf1f65082Ec3727BEc8cf933971C2a20d1aed3'; // lp address
+  const earnedAddress = dcau;
+  const _earnedToWmaticPath = [dcau, '0xd00ae08403B9bbb9124bB305C09058E32C39A48c'];
+  const _earnedToDcauPath = [dcau, dcau];
+  const _earnedToToken0Path = [dcau, dcau];
+  const _earnedToToken1Path = [dcau, '0xA8A2bFE97c51bB83e21bF0405e98CF9D8eFB2674'];
+  /**************************/
+
   await deploy('StrategyMasterChefLP', {
     from: deployer,
     log: true,
@@ -48,15 +54,15 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
       uniRouterAddress,
       pid,
       wantAddress,
-      dcau, // dcau
-      [dcau, WETH],
-      [dcau, dcau],
-      [dcau, dcau],
-      [dcau, linkAddress]
+      earnedAddress, // dcau
+      _earnedToWmaticPath,
+      _earnedToDcauPath,
+      _earnedToToken0Path,
+      _earnedToToken1Path
     ],
     deterministicDeployment: false,
   })
 }
 
-module.exports.tags = ['StrategyMasterChef', 'PolyDragon'];
+module.exports.tags = ['StrategyMasterChef', 'DragonCrypto'];
 module.exports.dependencies = ["MockDCAU", "VaultChef", "MasterChef"];

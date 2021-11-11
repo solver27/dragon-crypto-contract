@@ -8,15 +8,15 @@ const {
   getBigNumber,
 } = require("./shared");
 const UniswapV2Router = require("./abis/UniswapV2Router.json");
-const DeployedTokens = require("./args/tokens_dev.json");
+const AdditionalTokens = require("./args/additional_tokens_dev.json");
 
 require("dotenv").config();
 
-// const ROUTER_ADDRESS = "0x2D99ABD9008Dc933ff5c0CD271B88309593aB921"; // avalanche fuji
-// const FACTORY_ADDRESS = "0xE4A575550C2b460d2307b82dCd7aFe84AD1484dd"; // avalanche fuji
+const ROUTER_ADDRESS = "0x2D99ABD9008Dc933ff5c0CD271B88309593aB921"; // fuji pangolin
+const FACTORY_ADDRESS = "0xE4A575550C2b460d2307b82dCd7aFe84AD1484dd"; // fuji pangolin
 
-const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // rinkeby
-const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // rinkeby
+// const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // rinkeby
+// const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // rinkeby
 
 /**
  * This script is only for testnet, don't use it on mainnet
@@ -32,58 +32,21 @@ async function main() {
   const factory = await routerContract.factory();
 
   console.log("[factory]", factory);
-  // Deploying DCAU on testnet...
-
-  // creating dcau_usdc pair...
-  // console.log("creating dcau_usdc pair...");
-  // const dcau_usdc = await createPair(
-  //   ROUTER_ADDRESS,
-  //   FACTORY_ADDRESS,
-  //   DeployedTokens.dcau,
-  //   DeployedTokens.usdc,
-  //   getBigNumber(10000),
-  //   getBigNumber(50000),
-  //   alice.address,
-  //   alice
-  // );
-
-  // // creating dcau_weth pair
-  // console.log("creating dcau_weth pair...");
-  // const dcau_weth = await createPairETH(
-  //   ROUTER_ADDRESS,
-  //   FACTORY_ADDRESS,
-  //   DeployedTokens.dcau,
-  //   getBigNumber(10000),
-  //   getBigNumber(5),
-  //   alice.address,
-  //   alice
-  // );
-
-  // const content = {
-  //   dcau_usdc: dcau_usdc,
-  //   dcau_weth: dcau_weth,
-  // };
-
-  // await fs.writeFileSync(
-  //   "./scripts/args/pairs_dev.json",
-  //   JSON.stringify(content),
-  //   { flag: "w+" }
-  // );
-
+  
   const tokens = [
-    { symbol: "DAI", address: "0xa37EB8Fe910A00f973E0913024F631Ed387eE512" },
-    {
-      symbol: "POLYPUPBALL",
-      address: "0xa6A13db146b1e41F634f6EA2FDe4b5bEcBc672d4",
-    },
+    { symbol: "WAVAX", address: AdditionalTokens.WAVAX },
+    { symbol: "USDTe", address: AdditionalTokens.USDTe },
+    { symbol: "MIM", address: AdditionalTokens.MIM },
   ];
 
+  let pairsContent = {}
+
   for (const token of tokens) {
-    console.log(`creating USDC_${token.symbol} pair...`);
+    console.log(`creating DCAU_${token.symbol} pair...`);
     const pair = await createPair(
       ROUTER_ADDRESS,
       FACTORY_ADDRESS,
-      DeployedTokens.usdc,
+      "0x2c3eAe25FF60A83261beCdAed05AF955678aA319", // on fuji
       token.address,
       getBigNumber(10000),
       getBigNumber(50000),
@@ -91,8 +54,16 @@ async function main() {
       alice
     );
 
-    console.log(`created USDC_${token.symbol} pair at ${pair}`);
+    pairsContent['dcau_' + token.symbol.toLowerCase()] = pair
+
+    console.log(`created DCAU_${token.symbol} pair at ${pair}`);
   }
+
+  await fs.writeFileSync(
+    "./scripts/args/pairs_dev.json",
+    JSON.stringify(pairsContent),
+    { flag: "w+" }
+  );
 
   console.log("==END==");
 }
