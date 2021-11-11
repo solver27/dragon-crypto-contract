@@ -47,6 +47,22 @@ module.exports = {
     },
   },
   networks: {
+    // hardhat: {
+    //   allowUnlimitedContractSize: true,
+    //   settings: {
+    //     optimizer: {
+    //       enabled: true,
+    //       runs: 9999,
+    //     },
+    //   },
+    //   forking: {
+    //     url: "https://polygon-mainnet.g.alchemy.com/v2/YH7aKkMfvT_Mq0qYZOPGdsr0dM0GC4xe",
+    //     enabled: true,
+    //     // blockNumber: 5931780,
+    //     blockNumber: 4931901,
+    //   },
+    //   gasPrice: parseInt(utils.parseUnits("50", "gwei")),
+    // },
     hardhat: {
       allowUnlimitedContractSize: true,
       settings: {
@@ -56,12 +72,11 @@ module.exports = {
         },
       },
       forking: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/YH7aKkMfvT_Mq0qYZOPGdsr0dM0GC4xe",
+        url: "https://api.avax.network/ext/bc/C/rpc",
         enabled: true,
         // blockNumber: 5931780,
-        blockNumber: 4931901,
       },
-      gasPrice: parseInt(utils.parseUnits("50", "gwei")),
+      gasPrice: "auto",
     },
     // hardhat: {
     //   hardfork: "london",
@@ -124,6 +139,13 @@ module.exports = {
       tags: ["staging"],
       gasMultiplier: 2,
     },
+    avalanche: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      accounts,
+      chainId: 43114,
+      live: true,
+      saveDeployments: true,
+    }
   },
   etherscan: {
     apiKey: process.env.BSC_API_KEY, // BSC_API_KEY

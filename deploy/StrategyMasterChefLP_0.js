@@ -15,31 +15,33 @@
 
 require('dotenv').config();
 
-// This is for DCAU_WAVAx LP on fuji, pool id is 3
+// This is for DCAU_WAVAx LP on Avalanche,MC pool id is 0
 module.exports = async function ({ ethers, getNamedAccounts, deployments, getChainId }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const mockDCAU = await deployments.get("MockDCAU");
-  const vaultChef = await deployments.get("VaultChef");
-  const masterChef = await deployments.get("MasterChef");
+  // const mockDCAU = await deployments.get("MockDCAU");
+  // const vaultChef = await deployments.get("VaultChef");
+  // const masterChef = await deployments.get("MasterChef");
 
-  const dcau =
-    process.env.PRODUCTION_MODE === "development"
-      ? mockDCAU.address
-      : "0xmainnet dcau address here";
-  const withdrawFeeAddress = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b";
-  const feeAddress = "0x6C641CE6A7216F12d28692f9d8b2BDcdE812eD2b";
+  const vaultChef = { address: '0xc35F12114e20897A2a6B7AE1e1f2Aea389Ec909d' };
+  const masterChef = { address: '0x0be0d3d0c3a122b7f57b6119766880a83f95ae9f' };
+
+  const dcau = "0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30";
+  
+  /** @todo */
+  const withdrawFeeAddress = "0x306e5F7FAe63a86b3E2D88F94cCa8D7614684D91";
+  const feeAddress = "0x306e5F7FAe63a86b3E2D88F94cCa8D7614684D91";
 
   /** @todo should be changed*/
-  const uniRouterAddress = '0x2D99ABD9008Dc933ff5c0CD271B88309593aB921'; // Pangolin router on Fuji
-  const pid = 0;
-  const wantAddress = '0xAeEf1f65082Ec3727BEc8cf933971C2a20d1aed3'; // lp address
+  const uniRouterAddress = '0x60aE616a2155Ee3d9A68541Ba4544862310933d4'; // TradeJoe router on Avalanche
+  const pid = 2;
+  const wantAddress = '0xbD941531c1234ed2f9dbbC79aEe019bA85c16640'; // lp address
   const earnedAddress = dcau;
-  const _earnedToWmaticPath = [dcau, '0xd00ae08403B9bbb9124bB305C09058E32C39A48c'];
+  const _earnedToWmaticPath = [dcau, '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7'];
   const _earnedToDcauPath = [dcau, dcau];
   const _earnedToToken0Path = [dcau, dcau];
-  const _earnedToToken1Path = [dcau, '0xA8A2bFE97c51bB83e21bF0405e98CF9D8eFB2674'];
+  const _earnedToToken1Path = [dcau, '0x130966628846BFd36ff31a822705796e8cb8C18D'];
   /**************************/
 
   await deploy('StrategyMasterChefLP', {
@@ -64,5 +66,5 @@ module.exports = async function ({ ethers, getNamedAccounts, deployments, getCha
   })
 }
 
-module.exports.tags = ['StrategyMasterChef', 'DragonCrypto'];
-module.exports.dependencies = ["MockDCAU", "VaultChef", "MasterChef"];
+module.exports.tags = ['StrategyMasterChefLP', 'DragonCryptoAurum'];
+// module.exports.dependencies = ["MockDCAU", "VaultChef", "MasterChef"];

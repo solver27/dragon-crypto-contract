@@ -90,6 +90,9 @@ POLYPUP BALL/USDC (3% deposit) (15X multiplier)
   StrategyMasterChefLP: 0x510f35d760abd4Cb7B5a83c66781E013d28B6178
   VC pool id: 
 
+=== Avalanche deploy ===
+'0x60aE616a2155Ee3d9A68541Ba4544862310933d4': // TradeJoe router on Avalanche
+'0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10': // TradeJoe factory
 
 ======== AVAX LIVE =========
   DCAU: 0x100Cc3a819Dd3e8573fD2E46D1E66ee866068f30          // verified
@@ -104,3 +107,4 @@ POLYPUP BALL/USDC (3% deposit) (15X multiplier)
 
   ## Strats
   DCAU_WAVAX: 0x831b6a5983b503bEb7f55ec3f6A4583C37066Aa9
+  
